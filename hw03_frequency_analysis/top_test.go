@@ -80,3 +80,35 @@ func TestTop10(t *testing.T) {
 		}
 	})
 }
+
+func TestTop10BasicScenarios(t *testing.T) {
+	t.Run("single word repeated", func(t *testing.T) {
+		text := "слово слово слово"
+		expected := []string{"слово"}
+		require.Equal(t, expected, Top10(text))
+	})
+
+	t.Run("multiple words with same frequency", func(t *testing.T) {
+		text := "кот собака кот собака"
+		expected := []string{"кот", "собака"}
+		require.Equal(t, expected, Top10(text))
+	})
+
+	t.Run("words with punctuation", func(t *testing.T) {
+		text := "кот, собака. кот! собака?"
+		expected := []string{"кот!", "кот,", "собака.", "собака?"}
+		require.Equal(t, expected, Top10(text))
+	})
+
+	t.Run("case sensitivity", func(t *testing.T) {
+		text := "Кот кот КОТ"
+		expected := []string{"КОТ", "Кот", "кот"}
+		require.Equal(t, expected, Top10(text))
+	})
+
+	t.Run("empty string", func(t *testing.T) {
+		text := ""
+		expected := []string{}
+		require.Equal(t, expected, Top10(text))
+	})
+}
