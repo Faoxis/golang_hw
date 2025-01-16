@@ -24,4 +24,27 @@ func NewCache(capacity int) Cache {
 	}
 }
 
-type (lruCash)
+func (lruCash *lruCache) Set(key Key, value interface{}) bool {
+	oldValue, exists := lruCash.items[key]
+	if exists {
+		lruCash.queue.MoveToFront(oldValue)
+		oldValue.Value = value
+		return true
+	}
+	lruCash.queue.PushFront(value)
+	lruCash.items[key] = lruCash.queue.Front()
+	if lruCash.queue.Len() > lruCash.capacity {
+		last := lruCash.queue.Back()
+		lruCash.queue.Remove(last)
+
+	}
+	return false
+}
+
+func (lruCash *lruCache) Get(key Key) (interface{}, bool) {
+
+}
+
+func (lruCash *lruCache) Clear() {
+
+}
