@@ -23,3 +23,5 @@ func NewCache(capacity int) Cache {
 		items:    make(map[Key]*ListItem, capacity),
 	}
 }
+
+type (lruCash)
