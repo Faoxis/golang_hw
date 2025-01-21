@@ -190,3 +190,18 @@ func TestAlternatingPushFrontAndBack(t *testing.T) {
 	require.Equal(t, 40, l.Back().Value)
 	require.Equal(t, 10, l.Front().Next.Next.Value)
 }
+
+func TestRemovingOneElement(t *testing.T) {
+	l := NewList()
+
+	el := l.PushFront(10)
+	l.Remove(el)
+
+	require.Equal(t, 0, l.Len())
+
+	el = l.Front()
+	require.Nil(t, el)
+
+	el = l.Back()
+	require.Nil(t, el)
+}
