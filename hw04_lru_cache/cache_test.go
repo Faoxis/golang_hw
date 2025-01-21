@@ -66,6 +66,33 @@ func TestCache(t *testing.T) {
 		require.False(t, ok)
 		require.Nil(t, value)
 
+		cache.Clear()
+		value, ok = cache.Get("first")
+		require.False(t, ok)
+		require.Nil(t, value)
+
+		value, ok = cache.Get("second")
+		require.False(t, ok)
+		require.Nil(t, value)
+
+		value, ok = cache.Get("third")
+		require.False(t, ok)
+		require.Nil(t, value)
+	})
+
+	t.Run("purge element by Get method", func(t *testing.T) {
+		cache := NewCache(2)
+
+		cache.Set("first", 1)
+		cache.Set("second", 2)
+
+		cache.Get("first")
+
+		cache.Set("third", 3)
+
+		value, ok := cache.Get("second")
+		require.False(t, ok)
+		require.Nil(t, value)
 	})
 }
 

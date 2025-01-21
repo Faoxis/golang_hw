@@ -1,10 +1,12 @@
 package hw04lrucache
 
-type Key string
-type cacheValue struct {
-	key   Key
-	value interface{}
-}
+type (
+	Key        string
+	CacheValue struct {
+		key   Key
+		value interface{}
+	}
+)
 
 type Cache interface {
 	Set(key Key, value interface{}) bool
@@ -27,23 +29,23 @@ func NewCache(capacity int) Cache {
 }
 
 func (lruCash *lruCache) Set(key Key, value interface{}) bool {
-	//cacheValue := cacheValue{
-	//	key:   key,
-	//	value: value,
-	//}
-
+	cacheValue := CacheValue{
+		key:   key,
+		value: value,
+	}
 	oldValue, exists := lruCash.items[key]
 	if exists {
+		oldValue.Value = cacheValue
 		lruCash.queue.MoveToFront(oldValue)
-		//oldValue.Value.(value) = value
 		return true
 	}
-	lruCash.queue.PushFront(value)
+	lruCash.queue.PushFront(cacheValue)
 	lruCash.items[key] = lruCash.queue.Front()
 	if lruCash.queue.Len() > lruCash.capacity {
 		last := lruCash.queue.Back()
+		lastValue := last.Value.(CacheValue)
+		delete(lruCash.items, lastValue.key)
 		lruCash.queue.Remove(last)
-		//delete(lruCash.items, last)
 	}
 	return false
 }
@@ -52,7 +54,7 @@ func (lruCash *lruCache) Get(key Key) (interface{}, bool) {
 	value, exists := lruCash.items[key]
 	if exists {
 		lruCash.queue.MoveToFront(value)
-		return value.Value, true
+		return value.Value.(CacheValue).value, true
 	}
 	return nil, false
 }
