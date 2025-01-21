@@ -49,8 +49,23 @@ func TestCache(t *testing.T) {
 		require.Nil(t, val)
 	})
 
-	t.Run("purge logic", func(t *testing.T) {
+	t.Run("purge element by Set method", func(t *testing.T) {
 		// Write me
+		cache := NewCache(2)
+
+		wasInCache := cache.Set("first", 1)
+		require.False(t, wasInCache)
+
+		wasInCache = cache.Set("second", 2)
+		require.False(t, wasInCache)
+
+		wasInCache = cache.Set("third", 3)
+		require.False(t, wasInCache)
+
+		value, ok := cache.Get("first")
+		require.False(t, ok)
+		require.Nil(t, value)
+
 	})
 }
 

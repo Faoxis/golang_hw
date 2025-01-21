@@ -74,59 +74,40 @@ func (l *list) Remove(item *ListItem) {
 	if item == nil || l.len == 0 {
 		return
 	}
-	foundItem := l.find(item)
-	if foundItem == nil {
-		return
-	}
 
 	if item == l.front {
-		l.front = foundItem.Next
-		if foundItem.Next != nil {
-			foundItem.Next.Prev = nil
+		l.front = item.Next
+		if item.Next != nil {
+			item.Next.Prev = nil
 		}
 	} else if item == l.back {
-		l.back = foundItem.Prev
-		if foundItem.Prev != nil {
-			foundItem.Prev.Next = nil
+		l.back = item.Prev
+		if item.Prev != nil {
+			item.Prev.Next = nil
 		}
 	} else {
-		foundItem.Prev.Next = foundItem.Next
-		foundItem.Next.Prev = foundItem.Prev
+		item.Prev.Next = item.Next
+		item.Next.Prev = item.Prev
 	}
 
 	l.len--
 }
 
 func (l *list) MoveToFront(i *ListItem) {
-	if i == nil || l.len == 0 {
-		return
-	}
-	foundItem := l.find(i)
-	if foundItem == nil || foundItem == l.front {
+	if i == nil || l.len == 0 || i == l.front {
 		return
 	}
 
-	if foundItem == l.back {
-		l.back = foundItem.Prev
-		foundItem.Prev.Next = nil
+	if i == l.back {
+		l.back = i.Prev
+		i.Prev.Next = nil
 	} else {
-		foundItem.Prev.Next = foundItem.Next
-		foundItem.Next.Prev = foundItem.Prev
+		i.Prev.Next = i.Next
+		i.Next.Prev = i.Prev
 	}
 
-	foundItem.Next = l.front
-	foundItem.Prev = nil
-	l.front.Prev = foundItem
-	l.front = foundItem
-}
-
-func (l *list) find(item *ListItem) *ListItem {
-	current := l.front
-	for current != nil {
-		if current == item {
-			return current
-		}
-		current = current.Next
-	}
-	return nil
+	i.Next = l.front
+	i.Prev = nil
+	l.front.Prev = i
+	l.front = i
 }

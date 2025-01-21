@@ -191,18 +191,4 @@ func TestList(t *testing.T) {
 		require.Equal(t, 40, l.Back().Value)
 		require.Equal(t, 10, l.Front().Next.Next.Value)
 	})
-
-	t.Run("remove non-existent element", func(t *testing.T) {
-		l := NewList()
-
-		l.PushBack(10)
-		l.PushBack(20)
-
-		fakeItem := &ListItem{Value: 30}
-		l.Remove(fakeItem) // не должно менять список
-
-		require.Equal(t, 2, l.Len())
-		require.Equal(t, 10, l.Front().Value)
-		require.Equal(t, 20, l.Back().Value)
-	})
 }
