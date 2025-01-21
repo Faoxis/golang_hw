@@ -40,12 +40,13 @@ func (l *list) Back() *ListItem {
 
 func (l *list) PushFront(v interface{}) *ListItem {
 	item := &ListItem{Value: v}
-	if l.len == 0 {
+	switch l.len {
+	case 0:
 		l.front = item
 		l.back = item
 		l.len++
 		return item
-	} else {
+	default:
 		item.Next = l.front
 		l.front.Prev = item
 		l.front = item
@@ -56,12 +57,13 @@ func (l *list) PushFront(v interface{}) *ListItem {
 
 func (l *list) PushBack(v interface{}) *ListItem {
 	item := &ListItem{Value: v}
-	if l.len == 0 {
+	switch l.len {
+	case 0:
 		l.front = item
 		l.back = item
 		l.len++
 		return item
-	} else {
+	default:
 		item.Prev = l.back
 		l.back.Next = item
 		l.back = item
@@ -74,22 +76,21 @@ func (l *list) Remove(item *ListItem) {
 	if item == nil || l.len == 0 {
 		return
 	}
-
-	if item == l.front {
+	switch item {
+	case l.front:
 		l.front = item.Next
 		if item.Next != nil {
 			item.Next.Prev = nil
 		}
-	} else if item == l.back {
+	case l.back:
 		l.back = item.Prev
 		if item.Prev != nil {
 			item.Prev.Next = nil
 		}
-	} else {
+	default:
 		item.Prev.Next = item.Next
 		item.Next.Prev = item.Prev
 	}
-
 	l.len--
 }
 
