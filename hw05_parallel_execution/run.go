@@ -3,6 +3,7 @@ package hw05parallelexecution
 import (
 	"errors"
 	"sync"
+	"sync/atomic"
 )
 
 var ErrErrorsLimitExceeded = errors.New("errors limit exceeded")
@@ -11,57 +12,77 @@ type Task func() error
 
 // Run starts tasks in n goroutines and stops its work when receiving m errors from tasks.
 func Run(tasks []Task, n, m int) error {
-	if len(tasks) == 0 {
-		return nil
+	if m <= 0 {
+		return ErrErrorsLimitExceeded
 	}
 
-	// Place your code here.
-	var taskChannel = make(chan Task, n)
-	var errorChannel = make(chan error)
+	// Создаем канал для задач
+	taskChannel := make(chan Task, n)
 
-	waitGroup := sync.WaitGroup{}
-
-	for i := 0; i < n; i++ {
-		go doTask(&taskChannel, &errorChannel, &waitGroup)
+	// Создаем канал для сигнала завершения
+	doneChannel := make(chan struct{})
+	onceForDoneChannel := sync.Once{}
+	closeDoneChannel := func() {
+		onceForDoneChannel.Do(func() {
+			close(doneChannel)
+		})
 	}
 
-	foundErrors := 0
-	once := sync.Once{}
-	for len(tasks) > 0 {
-		select {
-		case taskChannel <- tasks[0]:
-			waitGroup.Add(1)
-			tasks = tasks[1:]
-		case <-errorChannel:
-			foundErrors++
-			if foundErrors >= m {
-				once.Do(func() {
-					close(taskChannel)
-					close(errorChannel)
-				})
-				return ErrErrorsLimitExceeded
+	wg := sync.WaitGroup{}
+	errorCounter := atomic.Int32{}
+
+	worker := func() {
+		defer wg.Done()
+		for {
+			select {
+			case <-doneChannel:
+				return
+			case task, ok := <-taskChannel:
+				if !ok {
+					return
+				}
+
+				err := task()
+				if err != nil {
+					errorCounter.Add(1)
+					if errorCounter.Load() >= int32(m) {
+						closeDoneChannel()
+						return
+					}
+				}
 			}
 		}
 	}
-	once.Do(func() {
-		close(taskChannel)
-		close(errorChannel)
-	})
-	waitGroup.Wait()
-	return nil
-}
 
-func doTask(taskChannel *chan Task, errorChannel *chan error, group *sync.WaitGroup) {
-	for {
-		task, ok := <-*taskChannel
-		if !ok {
-			return
-		}
+	for i := 0; i < n; i++ {
+		wg.Add(1)
+		go worker()
+	}
 
-		err := task()
-		if err != nil {
-			*errorChannel <- err
+	go func() {
+		defer close(taskChannel)
+		i := 0
+		for i < len(tasks) && errorCounter.Load() < int32(m) {
+			select {
+			case <-doneChannel:
+				return
+			default:
+			}
+
+			select {
+			case <-doneChannel:
+				return
+			case taskChannel <- tasks[i]:
+			}
+			i++
 		}
-		group.Done()
+	}()
+
+	wg.Wait()
+	closeDoneChannel()
+	if errorCounter.Load() >= int32(m) {
+		return ErrErrorsLimitExceeded
+	} else {
+		return nil
 	}
 }

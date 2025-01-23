@@ -20,15 +20,16 @@ func TestRun(t *testing.T) {
 		tasks := make([]Task, 0, tasksCount)
 
 		var runTasksCount int32
-		var sumTime time.Duration
 
+		goroutinsCounter := atomic.Int32{}
 		for i := 0; i < tasksCount; i++ {
-			taskSleep := time.Millisecond * time.Duration(rand.Intn(100))
-			sumTime += taskSleep
-
 			tasks = append(tasks, func() error {
-				time.Sleep(taskSleep)
+				goroutinsCounter.Add(1)
+				defer goroutinsCounter.Add(-1)
+
+				time.Sleep(time.Millisecond)
 				atomic.AddInt32(&runTasksCount, 1)
+
 				return nil
 			})
 		}
@@ -36,13 +37,22 @@ func TestRun(t *testing.T) {
 		workersCount := 5
 		maxErrorsCount := 1
 
-		start := time.Now()
-		err := Run(tasks, workersCount, maxErrorsCount)
-		elapsedTime := time.Since(start)
+		resChan := make(chan error)
+		defer close(resChan)
+
+		go func() {
+			err := Run(tasks, workersCount, maxErrorsCount)
+			resChan <- err
+		}()
+		require.Eventually(t, func() bool {
+			return int32(workersCount) == goroutinsCounter.Load()
+		}, time.Second*2, time.Millisecond)
+
+		err := <-resChan
 		require.NoError(t, err)
 
-		require.Equal(t, runTasksCount, int32(tasksCount), "not all tasks were completed")
-		require.LessOrEqual(t, int64(elapsedTime), int64(sumTime/2), "tasks were run sequentially?")
+		require.Equal(t, int32(tasksCount), runTasksCount, "not all tasks were completed")
+		//require.LessOrEqual(t, int64(elapsedTime), int64(sumTime/2), "tasks were run sequentially?")
 	})
 
 	t.Run("if were errors in first M tasks, than finished not more N+M tasks", func(t *testing.T) {
@@ -66,6 +76,36 @@ func TestRun(t *testing.T) {
 
 		require.Truef(t, errors.Is(err, ErrErrorsLimitExceeded), "actual err - %v", err)
 		require.LessOrEqual(t, runTasksCount, int32(workersCount+maxErrorsCount), "extra tasks were started")
+	})
+
+	t.Run("if task list is empty", func(t *testing.T) {
+		err := Run([]Task{}, 10, 1)
+		require.Nil(t, err)
+	})
+
+	t.Run("if goroutins more then tasks", func(t *testing.T) {
+		taskCounter := 50
+		goroutinCounter := 100
+
+		tasks := make([]Task, 0, taskCounter)
+		for i := 0; i < 0; i++ {
+			tasks[i] = func() error {
+				time.Sleep(time.Millisecond * 10)
+				return nil
+			}
+		}
+		err := Run(tasks, goroutinCounter, 1)
+		require.Nil(t, err)
+	})
+
+	t.Run("if m is zero", func(t *testing.T) {
+		err := Run([]Task{}, 1, 0)
+		require.ErrorIs(t, ErrErrorsLimitExceeded, err)
+	})
+
+	t.Run("if m is negative", func(t *testing.T) {
+		err := Run([]Task{}, 1, -42)
+		require.ErrorIs(t, ErrErrorsLimitExceeded, err)
 	})
 
 }
