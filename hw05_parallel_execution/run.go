@@ -15,7 +15,6 @@ func Run(tasks []Task, n, m int) error {
 	if m <= 0 {
 		return ErrErrorsLimitExceeded
 	}
-
 	// Создаем канал для задач
 	taskChannel := make(chan Task, n)
 
@@ -29,7 +28,7 @@ func Run(tasks []Task, n, m int) error {
 	}
 
 	wg := sync.WaitGroup{}
-	errorCounter := atomic.Int32{}
+	errorCounter := atomic.Int64{}
 
 	worker := func() {
 		defer wg.Done()
@@ -45,7 +44,7 @@ func Run(tasks []Task, n, m int) error {
 				err := task()
 				if err != nil {
 					errorCounter.Add(1)
-					if errorCounter.Load() >= int32(m) {
+					if errorCounter.Load() >= int64(m) {
 						closeDoneChannel()
 						return
 					}
@@ -62,7 +61,7 @@ func Run(tasks []Task, n, m int) error {
 	go func() {
 		defer close(taskChannel)
 		i := 0
-		for i < len(tasks) && errorCounter.Load() < int32(m) {
+		for i < len(tasks) && errorCounter.Load() < int64(m) {
 			select {
 			case <-doneChannel:
 				return
@@ -80,9 +79,8 @@ func Run(tasks []Task, n, m int) error {
 
 	wg.Wait()
 	closeDoneChannel()
-	if errorCounter.Load() >= int32(m) {
+	if errorCounter.Load() >= int64(m) {
 		return ErrErrorsLimitExceeded
-	} else {
-		return nil
 	}
+	return nil
 }
