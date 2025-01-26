@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -93,6 +94,48 @@ func TestPipeline(t *testing.T) {
 		require.Len(t, result, 0)
 		require.Less(t, int64(elapsed), int64(abortDur)+int64(fault))
 	})
+
+	t.Run("Zero stages case", func(t *testing.T) {
+		in := make(Bi)
+		defer close(in)
+
+		out := ExecutePipeline(in, nil, []Stage{}...)
+
+		inputValue := 42
+		go func() {
+			in <- inputValue
+		}()
+		outputValue := <-out
+		require.Equal(t, inputValue, outputValue)
+	})
+
+	t.Run("Getting message after done", func(t *testing.T) {
+		in := make(Bi, 1)
+		defer close(in)
+
+		doneCh := make(Bi)
+		out := ExecutePipeline(in, doneCh, stages...)
+		close(doneCh)
+		assert.Eventually(t, func() bool {
+			select {
+			case _, ok := <-doneCh:
+				return !ok
+			default:
+				return false
+			}
+		}, time.Second, time.Millisecond)
+
+		inputValue := 42
+		in <- inputValue
+
+		time.Sleep(time.Second)
+		var outputValue interface{}
+		select {
+		case outputValue = <-out:
+		default:
+		}
+		assert.NotEqual(t, inputValue, outputValue)
+	})
 }
 
 func TestAllStageStop(t *testing.T) {
@@ -150,6 +193,5 @@ func TestAllStageStop(t *testing.T) {
 		wg.Wait()
 
 		require.Len(t, result, 0)
-
 	})
 }
