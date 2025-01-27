@@ -8,30 +8,35 @@ type (
 
 type Stage func(in In) (out Out)
 
-func StageWrapper(in In, done In, stage Stage) Out {
-	if done != nil {
-		ch := make(Bi)
-		go func() {
-			defer close(ch)
-			for {
-				select {
-				case <-done:
+func createProxyChannel(in In, done In) Out {
+	proxyChannel := make(Bi)
+	go func() {
+		defer close(proxyChannel)
+		for {
+			select {
+			case <-done:
+				return
+			case task, ok := <-in:
+				if !ok {
 					return
-				default:
 				}
-
-				select {
-				case <-done:
-					return
-				case task, ok := <-in:
-					if !ok {
+				if task != nil {
+					select {
+					case <-done:
 						return
+					case proxyChannel <- task:
 					}
-					ch <- task
 				}
 			}
-		}()
-		return stage(ch)
+		}
+	}()
+	return proxyChannel
+}
+
+func stageWrapper(in In, done In, stage Stage) Out {
+	if done != nil {
+		proxyChannel := createProxyChannel(in, done)
+		return stage(proxyChannel)
 	}
 	return stage(in)
 }
@@ -39,7 +44,7 @@ func StageWrapper(in In, done In, stage Stage) Out {
 func ExecutePipeline(in In, done In, stages ...Stage) Out {
 	out := in
 	for _, stage := range stages {
-		out = StageWrapper(out, done, stage)
+		out = stageWrapper(out, done, stage)
 	}
-	return out
+	return createProxyChannel(out, done)
 }
