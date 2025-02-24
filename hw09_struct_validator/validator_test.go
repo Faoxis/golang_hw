@@ -290,6 +290,7 @@ func TestCommonValidate(t *testing.T) {
 	test(tests, t)
 }
 
+//nolint:thelper
 func test(tests []Test, t *testing.T) {
 	for i, tt := range tests {
 		t.Run(fmt.Sprintf("case %d", i), func(t *testing.T) {

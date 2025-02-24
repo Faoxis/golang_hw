@@ -9,32 +9,6 @@ import (
 	"strings"
 )
 
-type ValidationError struct {
-	Field string
-	Err   error
-}
-
-func NewValidationError(field string, err error) ValidationError {
-	return ValidationError{
-		Field: field,
-		Err:   err,
-	}
-}
-
-func (v ValidationError) Error() string {
-	return v.Field + ": " + v.Err.Error() + "\n"
-}
-
-type ValidationErrors []ValidationError
-
-func (v ValidationErrors) Error() string {
-	stringBuilder := strings.Builder{}
-	for _, err := range v {
-		stringBuilder.WriteString(err.Error() + "\n")
-	}
-	return stringBuilder.String()
-}
-
 func Validate(v interface{}) error {
 	// Place your code here.
 	value := reflect.ValueOf(v)
@@ -49,6 +23,7 @@ func Validate(v interface{}) error {
 
 		validateTag := fieldType.Tag.Get("validate")
 		validates := strings.Split(validateTag, "|")
+		//nolint:exhaustive
 		switch fieldValue.Kind() {
 		case reflect.String:
 			stringValidationErrors := validateStringField(validates, fieldType.Name, fieldValue.String())
@@ -70,6 +45,7 @@ func Validate(v interface{}) error {
 				}
 			}
 		default:
+			// not supported
 		}
 	}
 	if len(validationErrors) > 0 {
@@ -120,7 +96,7 @@ func validateIntField(validates []string, name string, value int64) ValidationEr
 }
 
 func runIntInValidator(name string, value int64, ins []string) error {
-	insInt := make([]int64, len(ins))
+	insInt := make([]int64, 0, len(ins))
 	for _, in := range ins {
 		v, err := strconv.ParseInt(in, 10, 64)
 		if err != nil {
