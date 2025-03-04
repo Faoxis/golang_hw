@@ -2,65 +2,95 @@ package hw10programoptimization
 
 import (
 	"bufio"
-	"encoding/json"
 	"fmt"
 	"io"
+	"runtime"
 	"strings"
 	"sync"
+
+	//nolint:depguard
+	"github.com/buger/jsonparser"
 )
 
-type User struct {
-	ID       int
-	Name     string
-	Username string
-	Email    string
-	Phone    string
-	Password string
-	Address  string
-}
+const EmailKey = "Email"
 
 type DomainStat map[string]int
 
-func GetDomainStat(r io.Reader, domain string) (DomainStat, error) {
-	users, errors := getUsers(r)
+func merge(stats []DomainStat) DomainStat {
 	result := make(DomainStat)
-	for {
-		select {
-		case err := <-errors:
-			return nil, fmt.Errorf("get users error: %w", err)
-		case user, ok := <-users:
-			if !ok {
-				return result, nil
-			}
-			if strings.HasSuffix(strings.ToLower(user.Email), domain) {
-				result[strings.ToLower(strings.SplitN(user.Email, "@", 2)[1])]++
-			}
+	for _, stat := range stats {
+		for k, v := range stat {
+			result[k] += v
 		}
 	}
+	return result
 }
 
-func getUsers(r io.Reader) (<-chan User, <-chan error) {
-	scanner := bufio.NewScanner(r)
-	users := make(chan User, 100)
-	errors := make(chan error)
+func GetDomainStat(r io.Reader, domain string) (DomainStat, error) {
+	emails, errors := getUsers(r)
 
 	wg := sync.WaitGroup{}
-	for scanner.Scan() {
+	workerCount := runtime.NumCPU() * 2
+	stats := make([]DomainStat, workerCount)
+	for i := 0; i < workerCount; i++ {
+		stats[i] = make(DomainStat)
 		wg.Add(1)
-		bytes := scanner.Bytes()
-		go func(bytes []byte) {
+		go func(workerId int) {
 			defer wg.Done()
-			var user User
-			if err := json.Unmarshal(bytes, &user); err != nil {
-				errors <- fmt.Errorf("unmarshal error: %w", err)
+			localStats := stats[workerId]
+			for email := range emails {
+				if strings.HasSuffix(strings.ToLower(email), "."+domain) {
+					domainName := strings.ToLower(strings.SplitN(email, "@", 2)[1])
+					localStats[domainName]++
+				}
 			}
-			users <- user
-		}(append([]byte{}, bytes...))
+		}(i)
+	}
+	wg.Wait()
+
+	for err := range errors {
+		return nil, fmt.Errorf("get users error: %w", err)
+	}
+
+	return merge(stats), nil
+}
+
+func getUsers(r io.Reader) (<-chan string, <-chan error) {
+	scanner := bufio.NewScanner(r)
+
+	var wg sync.WaitGroup
+
+	workerCount := runtime.NumCPU() * 4
+	jobs := make(chan []byte, workerCount)
+	go func() {
+		defer close(jobs)
+		for scanner.Scan() {
+			jobs <- append([]byte(nil), scanner.Bytes()...)
+		}
+	}()
+
+	emails := make(chan string, workerCount)
+	errors := make(chan error, 1)
+	for i := 0; i < workerCount; i++ {
+		wg.Add(1)
+
+		go func() {
+			defer wg.Done()
+			for data := range jobs {
+				email, err := jsonparser.GetString(data, EmailKey)
+				if err != nil {
+					errors <- fmt.Errorf("unmarshal error: %w", err)
+					return
+				}
+				emails <- email
+			}
+		}()
 	}
 	go func() {
-		defer close(users)
-		defer close(errors)
 		wg.Wait()
+		close(emails)
+		close(errors)
 	}()
-	return users, errors
+
+	return emails, errors
 }
