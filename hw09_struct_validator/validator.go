@@ -7,7 +7,7 @@ import (
 )
 
 type FieldValidator interface {
-	Validate(fieldName string, fieldValue reflect.Value, validates []string) ValidationErrors
+	Validate(fieldName string, fieldValue reflect.Value, validates []string) error
 }
 
 var validators = map[reflect.Kind]FieldValidator{
@@ -33,9 +33,17 @@ func Validate(v interface{}) error {
 		validateTag := fieldType.Tag.Get("validate")
 		validates := strings.Split(validateTag, "|")
 
-		if validator, exists := validators[fieldValue.Kind()]; exists {
-			validationErrors = append(validationErrors, validator.Validate(fieldType.Name, fieldValue, validates)...)
+		validator, exists := validators[fieldValue.Kind()]
+		if !exists {
+			return errors.New("unsupported type: " + fieldValue.Kind().String())
 		}
+		foundError := validator.Validate(fieldType.Name, fieldValue, validates)
+		var foundValidationErrors ValidationErrors
+		ok := errors.As(foundError, &foundValidationErrors)
+		if !ok {
+			return foundError
+		}
+		validationErrors = append(validationErrors, foundValidationErrors...)
 	}
 
 	if len(validationErrors) > 0 {

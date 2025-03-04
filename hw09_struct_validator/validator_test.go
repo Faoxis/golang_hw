@@ -75,6 +75,10 @@ type (
 		IntValues    []int    `validate:"min:1|max:5"`
 		StringValues []string `validate:"regexp:^\\d+$|in:1,2,3"`
 	}
+
+	InvalidValidationType struct {
+		RunValue rune `validate:"regexp:^\\d+$|in:1,2,3"`
+	}
 )
 
 func TestLenInString(t *testing.T) {
@@ -115,9 +119,7 @@ func TestRegexpString(t *testing.T) {
 			WrongRegexp{
 				Value: "some value",
 			},
-			ValidationErrors{
-				{Field: "Value", Err: errors.New("invalid regexp")},
-			},
+			errors.New("invalid regexp"),
 		},
 		{
 			OnlyNumberRegexp{
@@ -287,6 +289,18 @@ func TestCommonValidate(t *testing.T) {
 		},
 	}
 
+	test(tests, t)
+}
+
+func TestInvalidUserData(t *testing.T) {
+	tests := []Test{
+		{
+			InvalidValidationType{
+				RunValue: '1',
+			},
+			errors.New("unsupported type: int32"),
+		},
+	}
 	test(tests, t)
 }
 

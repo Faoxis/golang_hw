@@ -9,45 +9,37 @@ import (
 
 type IntValidator struct{}
 
-func (v IntValidator) Validate(fieldName string, fieldValue reflect.Value, validates []string) ValidationErrors {
+func (v IntValidator) Validate(fieldName string, fieldValue reflect.Value, validates []string) error {
 	return validateIntField(validates, fieldName, fieldValue.Int())
 }
 
-func validateIntField(validates []string, name string, value int64) ValidationErrors {
+func validateIntField(validates []string, name string, value int64) error {
 	validationErrors := ValidationErrors{}
 	for _, validate := range validates {
 		if validate == "" {
 			break
 		}
-		if strings.HasPrefix(validate, "max") {
+		var err error
+		switch {
+		case strings.HasPrefix(validate, "max"):
 			maxVal := strings.ReplaceAll(validate, "max:", "")
-			err := runMaxValidator(name, value, maxVal)
-			if err != nil {
-				var validationError ValidationError
-				if errors.As(err, &validationError) {
-					validationErrors = append(validationErrors, validationError)
-				}
-			}
-		}
-		if strings.HasPrefix(validate, "min") {
+			err = runMaxValidator(name, value, maxVal)
+		case strings.HasPrefix(validate, "min"):
 			maxVal := strings.ReplaceAll(validate, "min:", "")
-			err := runMinValidator(name, value, maxVal)
-			if err != nil {
-				var validationError ValidationError
-				if errors.As(err, &validationError) {
-					validationErrors = append(validationErrors, validationError)
-				}
-			}
-		}
-		if strings.HasPrefix(validate, "in") {
+			err = runMinValidator(name, value, maxVal)
+		case strings.HasPrefix(validate, "in"):
 			in := strings.ReplaceAll(validate, "in:", "")
 			ins := strings.Split(in, ",")
-			err := runIntInValidator(name, value, ins)
-			if err != nil {
-				var validationError ValidationError
-				if errors.As(err, &validationError) {
-					validationErrors = append(validationErrors, validationError)
-				}
+			err = runIntInValidator(name, value, ins)
+		default:
+			err = errors.New("invalid validation parameter")
+		}
+		if err != nil {
+			var validationError ValidationError
+			if errors.As(err, &validationError) {
+				validationErrors = append(validationErrors, validationError)
+			} else {
+				return err
 			}
 		}
 	}
@@ -59,10 +51,7 @@ func runIntInValidator(name string, value int64, ins []string) error {
 	for _, in := range ins {
 		v, err := strconv.ParseInt(in, 10, 64)
 		if err != nil {
-			return NewValidationError(
-				name,
-				errors.New("invalid in value format"),
-			)
+			return errors.New("invalid in value format")
 		}
 		insInt = append(insInt, v)
 	}
@@ -80,10 +69,7 @@ func runIntInValidator(name string, value int64, ins []string) error {
 func runMinValidator(name string, value int64, minVal string) error {
 	minValue, err := strconv.ParseInt(minVal, 10, 64)
 	if err != nil {
-		return NewValidationError(
-			name,
-			errors.New("invalid min value format"),
-		)
+		return errors.New("invalid min value format")
 	}
 	if value < minValue {
 		return NewValidationError(
@@ -97,10 +83,7 @@ func runMinValidator(name string, value int64, minVal string) error {
 func runMaxValidator(name string, value int64, maxVal string) error {
 	maxValue, err := strconv.ParseInt(maxVal, 10, 64)
 	if err != nil {
-		return NewValidationError(
-			name,
-			errors.New("invalid max value format"),
-		)
+		return errors.New("invalid max value format")
 	}
 	if value > maxValue {
 		return NewValidationError(
