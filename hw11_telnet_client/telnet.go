@@ -16,23 +16,26 @@ type TelnetClient interface {
 }
 
 type telnetClient struct {
-	address    string
-	timeout    time.Duration
-	in         io.ReadCloser
-	out        io.Writer
-	connection net.Conn
-	context    context.Context
+	address       string
+	timeout       time.Duration
+	in            io.ReadCloser
+	out           io.Writer
+	connection    net.Conn
+	context       context.Context
+	cancelContext context.CancelFunc
 }
 
 func NewTelnetClient(address string, timeout time.Duration, in io.ReadCloser, out io.Writer) TelnetClient {
 	// Place your code here.
+	contextCreated, cancelContext := context.WithCancel(context.Background())
 
 	return &telnetClient{
-		address: address,
-		timeout: timeout,
-		in:      in,
-		out:     out,
-		context: context.WithoutCancel(context.Background()),
+		address:       address,
+		timeout:       timeout,
+		in:            in,
+		out:           out,
+		context:       contextCreated,
+		cancelContext: cancelContext,
 	}
 }
 
@@ -50,7 +53,7 @@ func (tc *telnetClient) Close() error {
 		return errors.New("client not connected")
 	}
 	err := tc.connection.Close()
-	tc.context.Done()
+	tc.cancelContext()
 	if err != nil {
 		return err
 	}
