@@ -68,6 +68,9 @@ func Copy(fromPath, toPath string, offset, limit int64) error {
 	if limit > 0 && limit < totalSize {
 		totalSize = limit
 	}
+	if limit <= 0 || limit > totalSize {
+		limit = totalSize
+	}
 	bar := progressbar.DefaultBytes(totalSize, "Copying")
 
 	if err := copyData(fromFile, toFile, limit, bar); err != nil {
@@ -77,39 +80,21 @@ func Copy(fromPath, toPath string, offset, limit int64) error {
 }
 
 func copyData(fromFile *os.File, toFile *os.File, limit int64, bar *progressbar.ProgressBar) error {
-	buffer := make([]byte, 1024) // 1 KB
 	var copied int64
-
 	for {
 		if limit > 0 && copied >= limit {
 			break
 		}
 
-		bufferSize := int64(len(buffer))
-		chunkSize := bufferSize
-		if limit > 0 && (limit-copied) < bufferSize {
-			chunkSize = limit - copied
-		}
-
-		readBytes, err := fromFile.Read(buffer[:chunkSize])
-		if err != nil && !errors.Is(err, io.EOF) {
-			return err
-		}
-		if readBytes == 0 {
-			break
-		}
-
-		_, err = toFile.Write(buffer[:readBytes])
+		readBytes, err := io.CopyN(toFile, fromFile, limit)
 		if err != nil {
 			return err
 		}
-
-		copied += int64(readBytes)
-		if err := bar.Add(readBytes); err != nil {
+		if err := bar.Add(int(readBytes)); err != nil {
 			log.Printf("WARN: progress bar error: %v", err)
 		}
+		copied += readBytes
 	}
-
 	return nil
 }
 
