@@ -86,7 +86,7 @@ func copyData(fromFile *os.File, toFile *os.File, limit int64, bar *progressbar.
 			break
 		}
 
-		readBytes, err := io.CopyN(toFile, fromFile, limit)
+		readBytes, err := io.CopyN(io.MultiWriter(toFile, bar), fromFile, limit)
 		if err != nil {
 			return err
 		}
