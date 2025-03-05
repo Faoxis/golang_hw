@@ -1,9 +1,12 @@
+//go:build !bench
 // +build !bench
 
 package hw10programoptimization
 
 import (
 	"bytes"
+	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -35,5 +38,54 @@ func TestGetDomainStat(t *testing.T) {
 		result, err := GetDomainStat(bytes.NewBufferString(data), "unknown")
 		require.NoError(t, err)
 		require.Equal(t, DomainStat{}, result)
+	})
+
+	t.Run("find in invalid json", func(t *testing.T) {
+		result, err := GetDomainStat(bytes.NewBufferString(`{"Email": }`), "com")
+		require.Error(t, err)
+		require.Nil(t, result)
+	})
+
+	t.Run("empty input", func(t *testing.T) {
+		result, err := GetDomainStat(bytes.NewBufferString(""), "com")
+		require.NoError(t, err)
+		require.Equal(t, DomainStat{}, result)
+	})
+
+	t.Run("duplicate emails", func(t *testing.T) {
+		duplicateEmails := `{"Email":"aliquid_qui_ea@Browsedrive.gov" }
+							{"Email":"aliquid_qui_ea@Browsedrive.gov" }
+							{"Email":"aliquid_qui_ea@Browsedrive.gov" }`
+		result, err := GetDomainStat(bytes.NewBufferString(duplicateEmails), "gov")
+		require.NoError(t, err)
+		require.Equal(t, DomainStat{"browsedrive.gov": 3}, result)
+	})
+
+	t.Run("case insensitive domain matching", func(t *testing.T) {
+		caseData := `{"Email":"aliquid_qui_ea@example.gov" }
+					 {"Email":"aliquid_qui_ea@Example.gov" }
+					 {"Email":"aliquid_qui_ea@EXAMPLE.gov" }`
+		result, err := GetDomainStat(bytes.NewBufferString(caseData), "gov")
+		require.NoError(t, err)
+		require.Equal(t, DomainStat{"example.gov": 3}, result)
+	})
+
+	t.Run("emails without domain", func(t *testing.T) {
+		caseData := `{"Email":"aliquid_qui_ea@example"}`
+		result, err := GetDomainStat(bytes.NewBufferString(caseData), "gov")
+		require.NoError(t, err)
+		require.Equal(t, DomainStat{}, result)
+	})
+
+	t.Run("large input", func(t *testing.T) {
+		inputSize := 10_000
+		var largeData strings.Builder
+		for i := 0; i < inputSize; i++ {
+			largeData.WriteString(fmt.Sprintf(`{"Email":"aliquid_%d@example.com"}`+"\n", inputSize))
+		}
+
+		result, err := GetDomainStat(bytes.NewBufferString(largeData.String()), "com")
+		require.NoError(t, err)
+		require.Equal(t, DomainStat{"example.com": inputSize}, result)
 	})
 }
