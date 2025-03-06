@@ -80,20 +80,9 @@ func Copy(fromPath, toPath string, offset, limit int64) error {
 }
 
 func copyData(fromFile *os.File, toFile *os.File, limit int64, bar *progressbar.ProgressBar) error {
-	var copied int64
-	for {
-		if limit > 0 && copied >= limit {
-			break
-		}
-
-		readBytes, err := io.CopyN(io.MultiWriter(toFile, bar), fromFile, limit)
-		if err != nil {
-			return err
-		}
-		if err := bar.Add(int(readBytes)); err != nil {
-			log.Printf("WARN: progress bar error: %v", err)
-		}
-		copied += readBytes
+	_, err := io.CopyN(io.MultiWriter(toFile, bar), fromFile, limit)
+	if err != nil {
+		return err
 	}
 	return nil
 }
