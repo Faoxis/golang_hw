@@ -62,4 +62,47 @@ func TestTelnetClient(t *testing.T) {
 
 		wg.Wait()
 	})
+
+	t.Run("connect to nonexistent server", func(t *testing.T) {
+		in := &bytes.Buffer{}
+		out := &bytes.Buffer{}
+
+		timeout, err := time.ParseDuration("1s")
+		require.NoError(t, err)
+
+		client := NewTelnetClient("127.0.0.1:9999", timeout, io.NopCloser(in), out)
+		err = client.Connect()
+		require.Error(t, err, "expected connection error")
+	})
+
+	t.Run("send without connect", func(t *testing.T) {
+		in := &bytes.Buffer{}
+		out := &bytes.Buffer{}
+
+		client := NewTelnetClient("127.0.0.1:9999", 1*time.Second, io.NopCloser(in), out)
+
+		in.WriteString("test message\n")
+		err := client.Send()
+		require.Error(t, err, "expected error when sending without connection")
+	})
+
+	t.Run("receive without connect", func(t *testing.T) {
+		in := &bytes.Buffer{}
+		out := &bytes.Buffer{}
+
+		client := NewTelnetClient("127.0.0.1:9999", 1*time.Second, io.NopCloser(in), out)
+
+		err := client.Receive()
+		require.Error(t, err, "expected error when receiving without connection")
+	})
+
+	t.Run("close without connect", func(t *testing.T) {
+		in := &bytes.Buffer{}
+		out := &bytes.Buffer{}
+
+		client := NewTelnetClient("127.0.0.1:9999", 1*time.Second, io.NopCloser(in), out)
+
+		err := client.Close()
+		require.Error(t, err)
+	})
 }
