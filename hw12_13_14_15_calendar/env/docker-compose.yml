@@ -1,0 +1,39 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:17
+    container_name: calendar_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: calendar
+      POSTGRES_USER: calendar_user
+      POSTGRES_PASSWORD: calendar_pass
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "calendar_user"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: calendar_rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"   # AMQP
+      - "15672:15672" # Web UI
+    environment:
+      RABBITMQ_DEFAULT_USER: calendar_user
+      RABBITMQ_DEFAULT_PASS: calendar_pass
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  postgres_data:
