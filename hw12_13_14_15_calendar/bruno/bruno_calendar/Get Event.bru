@@ -1,0 +1,15 @@
+meta {
+  name: Get Event
+  type: http
+  seq: 4
+}
+
+get {
+  url: http://localhost:8080/events/{{eventId}}
+  body: none
+  auth: inherit
+}
+
+vars:pre-request {
+  eventId: e504738e-569e-11f0-aad0-46e9fdcea21d
+}

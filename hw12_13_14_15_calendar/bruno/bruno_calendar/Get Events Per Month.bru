@@ -1,0 +1,15 @@
+meta {
+  name: Get Events Per Month
+  type: http
+  seq: 7
+}
+
+get {
+  url: http://localhost:8080/events?week={{month}}
+  body: none
+  auth: inherit
+}
+
+params:query {
+  week: {{month}}
+}

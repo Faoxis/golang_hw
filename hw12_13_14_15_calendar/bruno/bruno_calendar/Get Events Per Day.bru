@@ -1,0 +1,15 @@
+meta {
+  name: Get Events Per Day
+  type: http
+  seq: 5
+}
+
+get {
+  url: http://localhost:8080/events?day=2025-07-05
+  body: none
+  auth: inherit
+}
+
+params:query {
+  day: 2025-07-05
+}

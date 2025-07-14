@@ -56,6 +56,7 @@ func (calendarDuration *CalendarDuration) Scan(src interface{}) error {
 				*calendarDuration = CalendarDuration(dur)
 				return nil
 			}
+			return fmt.Errorf("can't scan value of type %T", src)
 		}
 	}
 

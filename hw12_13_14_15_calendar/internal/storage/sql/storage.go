@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/Faoxis/golang_hw/hw12_13_14_15_calendar/internal/app"
 	"github.com/Faoxis/golang_hw/hw12_13_14_15_calendar/internal/storage"
+	_ "github.com/jackc/pgx/v5"
 	"time"
 )
 
@@ -88,7 +89,7 @@ func (storage *Storage) ListEventsForDay(ctx context.Context, date time.Time) ([
 
 func (storage *Storage) ListEventsForWeek(ctx context.Context, date time.Time) ([]storage.Event, error) {
 	start := time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, time.UTC)
-	end := start.Add(24 * time.Hour * 7)
+	end := start.AddDate(0, 0, 7)
 	return storage.listEvents(ctx, start, end)
 }
 
@@ -99,7 +100,7 @@ func (storage *Storage) ListEventsForMonth(ctx context.Context, date time.Time) 
 }
 
 func (strg *Storage) listEvents(ctx context.Context, start time.Time, end time.Time) ([]storage.Event, error) {
-	query := `SELECT * FROM events WHERE start_time > $1 AND start_time < $2;`
+	query := `SELECT * FROM events WHERE start_time >= $1 AND start_time < $2;`
 	rows, err := strg.db.QueryContext(ctx, query, start, end)
 	if err != nil {
 		return nil, err

@@ -2,6 +2,7 @@ package internalhttp
 
 import (
 	"fmt"
+
 	"github.com/Faoxis/golang_hw/hw12_13_14_15_calendar/internal/storage"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -30,7 +31,7 @@ func getEvents(application Application, logger Logger) http.HandlerFunc {
 				w.WriteHeader(http.StatusBadRequest)
 				return
 			}
-			events, err = application.ListEventsForDay(r.Context(), date)
+			events, err = application.ListEventsForWeek(r.Context(), date)
 		} else if month := query.Get("month"); month != "" {
 			date, err := time.Parse("2006-01-02", month)
 			if err != nil {
@@ -38,7 +39,7 @@ func getEvents(application Application, logger Logger) http.HandlerFunc {
 				w.WriteHeader(http.StatusBadRequest)
 				return
 			}
-			events, err = application.ListEventsForDay(r.Context(), date)
+			events, err = application.ListEventsForMonth(r.Context(), date)
 		} else {
 			logger.Warn(fmt.Sprintf("invalid query: %s", query))
 			w.WriteHeader(http.StatusBadRequest)

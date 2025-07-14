@@ -24,7 +24,6 @@ func init() {
 }
 
 func main() {
-	// TODO: не работает выборка по дням!!!!
 	flag.Parse()
 
 	if flag.Arg(0) == "version" {
@@ -59,7 +58,7 @@ func main() {
 			log.Fatalf("sql storage failed: %v", err)
 		}
 	}
-	storage.Close()
+	defer storage.Close()
 	calendar := app.New(logg, storage)
 
 	host := config.Server.Host

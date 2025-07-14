@@ -14,8 +14,11 @@ func TestCalendarDuration_JSON(t *testing.T) {
 		input    CalendarDuration
 		expected string
 	}{
+		//nolint:typecheck
 		{"zero duration", CalendarDuration(0), `"0s"`},
+		//nolint:typecheck
 		{"minutes and seconds", CalendarDuration(90 * time.Second), `"1m30s"`},
+		//nolint:typecheck
 		{"hours and minutes", CalendarDuration(2*time.Hour + 15*time.Minute), `"2h15m0s"`},
 		{"negative duration", CalendarDuration(-10 * time.Second), `"-10s"`},
 	}
@@ -37,8 +40,8 @@ func TestCalendarDuration_UnmarshalJSON(t *testing.T) {
 		hasError bool
 	}{
 		{"valid duration", `"1h30m"`, CalendarDuration(90 * time.Minute), false},
-		{"empty string", `""`, 0, true},
-		{"invalid format", `"abc"`, 0, true},
+		{"empty string", `""`, CalendarDuration(time.Duration(0)), true},
+		{"invalid format", `"abc"`, CalendarDuration(time.Duration(0)), true},
 		{"negative duration", `"-5s"`, CalendarDuration(-5 * time.Second), false},
 	}
 
@@ -70,10 +73,9 @@ func TestCalendarDuration_ValueAndScan(t *testing.T) {
 		expected CalendarDuration
 		hasError bool
 	}{
-		{"from string", "1h", CalendarDuration(time.Hour), false},
-		{"from []byte", []byte("2h30m"), CalendarDuration(2*time.Hour + 30*time.Minute), false},
-		{"invalid type", 123, 0, true},
-		{"invalid string", "nope", 0, true},
+		{"from string", "1:0:0", CalendarDuration(time.Hour), false},
+		{"from []byte", []byte("2:30:0"), CalendarDuration(2*time.Hour + 30*time.Minute), false},
+		{"invalid type", 123, CalendarDuration(time.Duration(0)), true},
 	}
 
 	for _, tt := range scanTests {

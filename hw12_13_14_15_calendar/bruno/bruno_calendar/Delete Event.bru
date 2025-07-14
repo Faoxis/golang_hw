@@ -1,0 +1,15 @@
+meta {
+  name: Delete Event
+  type: http
+  seq: 2
+}
+
+delete {
+  url: http://localhost:8080/events/{{eventId}}
+  body: none
+  auth: inherit
+}
+
+vars:pre-request {
+  eventId: 82821704-5674-11f0-aad0-46e9fdcea21d
+}
