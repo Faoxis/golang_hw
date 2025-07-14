@@ -3,11 +3,12 @@ package internalhttp
 import (
 	"fmt"
 
-	"github.com/Faoxis/golang_hw/hw12_13_14_15_calendar/internal/storage"
-	"github.com/go-chi/chi/v5"
-	"github.com/google/uuid"
 	"net/http"
 	"time"
+
+	"github.com/Faoxis/golang_hw/hw12_13_14_15_calendar/internal/storage"
+	router "github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 )
 
 func getEvents(application Application, logger Logger) http.HandlerFunc {
@@ -65,7 +66,7 @@ func getEvents(application Application, logger Logger) http.HandlerFunc {
 
 func deleteEvent(application Application, logger Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		id := chi.URLParam(r, "id")
+		id := router.URLParam(r, "id")
 
 		err := application.DeleteEvent(r.Context(), id)
 		if err != nil {
@@ -79,7 +80,7 @@ func deleteEvent(application Application, logger Logger) http.HandlerFunc {
 
 func updateEvent(application Application, logger Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		id := chi.URLParam(r, "id")
+		id := router.URLParam(r, "id")
 		eventRequest, err := fromJson[EventRequest](r.Body)
 		if err != nil {
 			logger.Warn(fmt.Sprintf("error parsing event: %v", err))
@@ -109,7 +110,7 @@ func updateEvent(application Application, logger Logger) http.HandlerFunc {
 
 func getEvent(app Application, logger Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		id := chi.URLParam(r, "id")
+		id := router.URLParam(r, "id")
 		event, err := app.GetEventByID(r.Context(), id)
 		if err != nil {
 			logger.Warn(fmt.Sprintf("Failed to get event id: %v", err))

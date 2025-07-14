@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/golang-migrate/migrate/v4"
+	migration "github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
@@ -22,7 +22,7 @@ func RunMigrations(dsn string, migrationsPath string) error {
 		return fmt.Errorf("migrate driver: %w", err)
 	}
 
-	m, err := migrate.NewWithDatabaseInstance(
+	m, err := migration.NewWithDatabaseInstance(
 		"file://"+migrationsPath,
 		"postgres", driver)
 	if err != nil {
@@ -30,7 +30,7 @@ func RunMigrations(dsn string, migrationsPath string) error {
 	}
 
 	err = m.Up()
-	if err != nil && !errors.Is(err, migrate.ErrNoChange) {
+	if err != nil && !errors.Is(err, migration.ErrNoChange) {
 		return fmt.Errorf("migrate up: %w", err)
 	}
 

@@ -4,13 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/Faoxis/golang_hw/hw12_13_14_15_calendar/internal/calendar_types"
-	"github.com/Faoxis/golang_hw/hw12_13_14_15_calendar/internal/storage"
-	"github.com/go-chi/chi/v5/middleware"
 	"net/http"
 	"time"
 
-	"github.com/go-chi/chi/v5"
+	"github.com/Faoxis/golang_hw/hw12_13_14_15_calendar/internal/calendar_types"
+	"github.com/Faoxis/golang_hw/hw12_13_14_15_calendar/internal/storage"
+	"github.com/go-chi/chi/v5/middleware"
+
+	route "github.com/go-chi/chi/v5"
 )
 
 type Server struct {
@@ -49,7 +50,7 @@ type Application interface {
 }
 
 func NewServer(logger Logger, host string, port int, app Application) *Server {
-	router := chi.NewRouter()
+	router := route.NewRouter()
 
 	router.Use(middleware.RequestID)
 	router.Use(middleware.Recoverer)
@@ -62,7 +63,7 @@ func NewServer(logger Logger, host string, port int, app Application) *Server {
 	router.Get("/hello", func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte("Hello, World!"))
 	})
-	router.Route("/events", func(router chi.Router) {
+	router.Route("/events", func(router route.Router) {
 		router.Get("/", getEvents(app, logger))
 		router.Post("/", addNewEvent(app, logger))
 		router.Get("/{id}", getEvent(app, logger))
