@@ -3,13 +3,14 @@ package main
 import (
 	"context"
 	"flag"
-	sqlstorage "github.com/Faoxis/golang_hw/hw12_13_14_15_calendar/internal/storage/sql"
 	"log"
 	"os"
 	"os/signal"
 	"path/filepath"
 	"syscall"
 	"time"
+
+	sqlstorage "github.com/Faoxis/golang_hw/hw12_13_14_15_calendar/internal/storage/sql"
 
 	"github.com/Faoxis/golang_hw/hw12_13_14_15_calendar/internal/app"
 	"github.com/Faoxis/golang_hw/hw12_13_14_15_calendar/internal/logger"
@@ -63,7 +64,11 @@ func main() {
 
 	host := config.Server.Host
 	port := config.Server.Port
-	server := internalhttp.NewServer(logg, host, port, calendar)
+	grpcPort := config.Server.GRPCPort
+
+	httpServer := internalhttp.NewServer(logg, host, port, calendar)
+	grpcServer := grpcserver.NewServer(logg, host, grpcPort, calendar)
+
 	ctx, cancel := signal.NotifyContext(context.Background(),
 		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 	defer cancel()
@@ -74,15 +79,26 @@ func main() {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 		defer cancel()
 
-		if err := server.Stop(ctx); err != nil {
+		if err := httpServer.Stop(ctx); err != nil {
 			logg.Error("failed to stop http server: " + err.Error())
+		}
+		if err := grpcServer.Stop(ctx); err != nil {
+			logg.Error("failed to stop grpc server: " + err.Error())
 		}
 	}()
 
 	logg.Info("calendar is running...")
 
-	if err := server.Start(ctx); err != nil {
-		logg.Error("failed to start http server: " + err.Error())
+	// Запускаем HTTP сервер в горутине
+	go func() {
+		if err := httpServer.Start(ctx); err != nil {
+			logg.Error("failed to start http server: " + err.Error())
+		}
+	}()
+
+	// Запускаем gRPC сервер в основной горутине
+	if err := grpcServer.Start(ctx); err != nil {
+		logg.Error("failed to start grpc server: " + err.Error())
 		cancel()
 		os.Exit(1) //nolint:gocritic
 	}

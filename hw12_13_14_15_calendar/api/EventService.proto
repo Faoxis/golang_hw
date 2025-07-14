@@ -1,7 +1,101 @@
+//go:generate protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative EventService.proto
+
 syntax = "proto3";
 
-package event;
+package calendar;
 
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+
+option go_package = "github.com/Faoxis/golang_hw/hw12_13_14_15_calendar/api";
+
+// Событие - основная сущность календаря
 message Event {
-    // TODO
+    string id = 1;                                    // Уникальный идентификатор события
+    string title = 2;                                 // Заголовок события
+    google.protobuf.Timestamp start_time = 3;        // Дата и время начала события
+    google.protobuf.Duration duration = 4;           // Длительность события
+    string description = 5;                          // Описание события (опционально)
+    string user_id = 6;                              // ID пользователя, владельца события
+    google.protobuf.Duration notify_before = 7;      // За сколько времени высылать уведомление (опционально)
+}
+
+// Запрос на создание события
+message CreateEventRequest {
+    string title = 1;                                // Заголовок события
+    google.protobuf.Timestamp start_time = 2;        // Дата и время начала события
+    google.protobuf.Duration duration = 3;           // Длительность события
+    string description = 4;                          // Описание события (опционально)
+    string user_id = 5;                              // ID пользователя
+    google.protobuf.Duration notify_before = 6;      // За сколько времени высылать уведомление (опционально)
+}
+
+// Ответ на создание события
+message CreateEventResponse {
+    Event event = 1;                                 // Созданное событие
+}
+
+// Запрос на обновление события
+message UpdateEventRequest {
+    string id = 1;                                   // ID события для обновления
+    string title = 2;                                // Новый заголовок события
+    google.protobuf.Timestamp start_time = 3;        // Новая дата и время начала события
+    google.protobuf.Duration duration = 4;           // Новая длительность события
+    string description = 5;                          // Новое описание события (опционально)
+    string user_id = 6;                              // Новый ID пользователя
+    google.protobuf.Duration notify_before = 7;      // Новое время уведомления (опционально)
+}
+
+// Ответ на обновление события
+message UpdateEventResponse {
+    Event event = 1;                                 // Обновленное событие
+}
+
+// Запрос на удаление события
+message DeleteEventRequest {
+    string id = 1;                                   // ID события для удаления
+}
+
+// Ответ на удаление события
+message DeleteEventResponse {
+    bool success = 1;                                // Успешность операции
+}
+
+// Запрос на получение события по ID
+message GetEventRequest {
+    string id = 1;                                   // ID события
+}
+
+// Ответ на получение события по ID
+message GetEventResponse {
+    Event event = 1;                                 // Событие
+}
+
+// Запрос на получение списка событий
+message ListEventsRequest {
+    google.protobuf.Timestamp date = 1;              // Дата для фильтрации
+    string period = 2;                               // Период: "day", "week", "month"
+}
+
+// Ответ на получение списка событий
+message ListEventsResponse {
+    repeated Event events = 1;                       // Список событий
+}
+
+// Сервис календаря
+service EventService {
+    // Создать событие
+    rpc CreateEvent(CreateEventRequest) returns (CreateEventResponse);
+    
+    // Обновить событие
+    rpc UpdateEvent(UpdateEventRequest) returns (UpdateEventResponse);
+    
+    // Удалить событие
+    rpc DeleteEvent(DeleteEventRequest) returns (DeleteEventResponse);
+    
+    // Получить событие по ID
+    rpc GetEvent(GetEventRequest) returns (GetEventResponse);
+    
+    // Получить список событий на день/неделю/месяц
+    rpc ListEvents(ListEventsRequest) returns (ListEventsResponse);
 }

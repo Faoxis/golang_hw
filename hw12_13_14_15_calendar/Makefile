@@ -35,4 +35,7 @@ lint: install-lint-deps
 lint-docker:
 	docker run --rm -v $(shell pwd):/app -w /app golangci/golangci-lint:v1.57.2 golangci-lint run
 
-.PHONY: build run build-img run-img version test lint lint-docker
+generate:
+	go generate ./...
+
+.PHONY: build run build-img run-img version test lint lint-docker generate
