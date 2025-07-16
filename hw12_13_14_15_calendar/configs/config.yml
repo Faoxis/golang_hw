@@ -1,0 +1,18 @@
+logger:
+  level: debug
+
+server:
+  host: "localhost"
+  port: 8080
+
+storage:
+  type: database
+  host: localhost
+  port: 5434
+  user: calendar_user
+  password: calendar_pass
+  database: calendar
+  sslmode: disable
+
+#  type: memory
+#  dsn: ""

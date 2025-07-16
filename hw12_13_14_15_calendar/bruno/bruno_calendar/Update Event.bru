@@ -1,0 +1,26 @@
+meta {
+  name: Update Event
+  type: http
+  seq: 3
+}
+
+put {
+  url: http://localhost:8080/events/{{eventId}}
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "title": "Team Meeting",  
+    "description": "Sprint Planning",  
+    "user_id": "user123",  
+    "start_time": "2025-07-01T14:00:00Z",
+    "duration": "1h30m0s",  
+    "notify_before": "15m0s"
+  }
+}
+
+vars:pre-request {
+  eventId: e504738e-569e-11f0-aad0-46e9fdcea21d
+}

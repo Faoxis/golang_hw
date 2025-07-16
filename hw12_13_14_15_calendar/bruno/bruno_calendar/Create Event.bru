@@ -1,0 +1,31 @@
+meta {
+  name: Create Event
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:8080/events
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "title": "Встреча с командой",
+    "description": "Обсуждение планов на квартал",
+    "user_id": "user123",
+    "start_time": "2025-07-05T10:30:00Z",
+    "duration": "1h0m0s",
+    "notify_before": "30m0s"
+  }
+}
+
+tests {
+    function onResponse(res) {
+      const data = res.getBody();              // Получаем ответ как объект JSON :contentReference[oaicite:4]{index=4}
+      const id = data.ID || data.id || data.eventId; // Определяем ключ поля ID
+      bru.setEnvVar("eventId", id);           // Сохраняем в переменную окружения :contentReference[oaicite:5]{index=5}
+    }
+    onResponse(res);
+}
