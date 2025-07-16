@@ -14,6 +14,7 @@ import (
 
 	"github.com/Faoxis/golang_hw/hw12_13_14_15_calendar/internal/app"
 	"github.com/Faoxis/golang_hw/hw12_13_14_15_calendar/internal/logger"
+	grpcserver "github.com/Faoxis/golang_hw/hw12_13_14_15_calendar/internal/server/grpc"
 	internalhttp "github.com/Faoxis/golang_hw/hw12_13_14_15_calendar/internal/server/http"
 	memorystorage "github.com/Faoxis/golang_hw/hw12_13_14_15_calendar/internal/storage/memory"
 )
