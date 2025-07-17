@@ -17,8 +17,9 @@ type Config struct {
 }
 
 type Server struct {
-	Host string
-	Port int
+	Host     string
+	Port     int
+	GRPCPort string `yaml:"grpc_port"`
 }
 
 type Storage struct {

@@ -2,6 +2,7 @@ package internalhttp
 
 import (
 	"fmt"
+	"github.com/Faoxis/golang_hw/hw12_13_14_15_calendar/internal/server"
 
 	"net/http"
 	"time"
@@ -11,7 +12,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func getEvents(application Application, logger Logger) http.HandlerFunc {
+func getEvents(application server.Application, logger server.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		query := r.URL.Query()
 
@@ -64,7 +65,7 @@ func getEvents(application Application, logger Logger) http.HandlerFunc {
 	}
 }
 
-func deleteEvent(application Application, logger Logger) http.HandlerFunc {
+func deleteEvent(application server.Application, logger server.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := router.URLParam(r, "id")
 
@@ -78,7 +79,7 @@ func deleteEvent(application Application, logger Logger) http.HandlerFunc {
 	}
 }
 
-func updateEvent(application Application, logger Logger) http.HandlerFunc {
+func updateEvent(application server.Application, logger server.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := router.URLParam(r, "id")
 		eventRequest, err := fromJson[EventRequest](r.Body)
@@ -108,7 +109,7 @@ func updateEvent(application Application, logger Logger) http.HandlerFunc {
 	}
 }
 
-func getEvent(app Application, logger Logger) http.HandlerFunc {
+func getEvent(app server.Application, logger server.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := router.URLParam(r, "id")
 		event, err := app.GetEventByID(r.Context(), id)
@@ -131,7 +132,7 @@ func getEvent(app Application, logger Logger) http.HandlerFunc {
 	}
 }
 
-func addNewEvent(app Application, logger Logger) http.HandlerFunc {
+func addNewEvent(app server.Application, logger server.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		event, err := fromJson[EventRequest](r.Body)
 		if err != nil {
