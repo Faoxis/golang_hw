@@ -2,34 +2,65 @@ syntax = "proto3";
 
 package event;
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
 option go_package = "./api;api";
 
 message CreateEventRequest {
+  string title = 1;
+  google.protobuf.Timestamp startTime = 2;
+  google.protobuf.Duration duration = 3;
+  string description = 4;
+  string userId = 5;
+  google.protobuf.Duration notifyBefore = 6;
+}
+
+message UpdateEventRequest {
+  string id = 1;
   string title = 2;
   google.protobuf.Timestamp startTime = 3;
-  string duration = 4;
+  google.protobuf.Duration duration = 4;
   string description = 5;
   string userId = 6;
-  string NotifyBefore = 7;
+  google.protobuf.Duration notifyBefore = 7;
+}
+
+message DeleteEventRequest {
+  string id = 1;
+}
+
+message DeleteEventResponse {
+  bool success = 1;
 }
 
 message GetEventRequest {
   string id = 1;
 }
 
+message ListEventsRequest {
+  google.protobuf.Timestamp date = 1;
+  string period = 2; // "day", "week", "month"
+}
+
+message ListEventsResponse {
+  repeated EventResponse events = 1;
+}
+
 message EventResponse {
   string id = 1;
   string title = 2;
   google.protobuf.Timestamp startTime = 3;
-  string duration = 4;
+  google.protobuf.Duration duration = 4;
   string description = 5;
   string userId = 6;
-  string NotifyBefore = 7;
+  google.protobuf.Duration notifyBefore = 7;
 }
 
 service CalendarService {
   rpc CreateEvent(CreateEventRequest) returns (EventResponse);
+  rpc UpdateEvent(UpdateEventRequest) returns (EventResponse);
+  rpc DeleteEvent(DeleteEventRequest) returns (DeleteEventResponse);
   rpc GetEvent(GetEventRequest) returns (EventResponse);
+  rpc ListEvents(ListEventsRequest) returns (ListEventsResponse);
 }
 
 
