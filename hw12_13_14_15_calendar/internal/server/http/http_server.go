@@ -4,52 +4,22 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/Faoxis/golang_hw/hw12_13_14_15_calendar/internal/server"
 	"net/http"
 	"time"
 
-	"github.com/Faoxis/golang_hw/hw12_13_14_15_calendar/internal/calendar_types"
-	"github.com/Faoxis/golang_hw/hw12_13_14_15_calendar/internal/storage"
 	"github.com/go-chi/chi/v5/middleware"
 
 	route "github.com/go-chi/chi/v5"
 )
 
-type Server struct {
-	logger      Logger
-	application Application
+type HttpServer struct {
+	logger      server.Logger
+	application server.Application
 	server      *http.Server
 }
 
-type Logger interface {
-	Debug(msg string)
-	Info(msg string)
-	Error(msg string)
-	Warn(msg string)
-}
-
-type Application interface {
-	CreateEvent(
-		ctx context.Context,
-		id, title, description, userID string,
-		startTime time.Time,
-		duration, notifyBefore calendar_types.CalendarDuration,
-	) error
-
-	UpdateEvent(
-		ctx context.Context,
-		id, title, description, userID string,
-		startTime time.Time,
-		duration, notifyBefore calendar_types.CalendarDuration,
-	) error
-
-	DeleteEvent(ctx context.Context, id string) error
-	GetEventByID(ctx context.Context, id string) (storage.Event, error)
-	ListEventsForDay(ctx context.Context, date time.Time) ([]storage.Event, error)
-	ListEventsForWeek(ctx context.Context, date time.Time) ([]storage.Event, error)
-	ListEventsForMonth(ctx context.Context, date time.Time) ([]storage.Event, error)
-}
-
-func NewServer(logger Logger, host string, port int, app Application) *Server {
+func NewServer(logger server.Logger, host string, port int, app server.Application) server.CalculatorServer {
 	router := route.NewRouter()
 
 	router.Use(middleware.RequestID)
@@ -76,14 +46,14 @@ func NewServer(logger Logger, host string, port int, app Application) *Server {
 		Handler: router,
 	}
 
-	return &Server{
+	return &HttpServer{
 		logger:      logger,
 		application: app,
 		server:      srv,
 	}
 }
 
-func (s *Server) Start(ctx context.Context) error {
+func (s *HttpServer) Start(ctx context.Context) error {
 	go func() {
 		if err := s.server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			s.logger.Error("http server error: " + err.Error())
@@ -93,7 +63,7 @@ func (s *Server) Start(ctx context.Context) error {
 	return nil
 }
 
-func (s *Server) Stop(ctx context.Context) error {
+func (s *HttpServer) Stop(ctx context.Context) error {
 	return s.server.Shutdown(ctx)
 
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	internalgrpc "github.com/Faoxis/golang_hw/hw12_13_14_15_calendar/internal/server/grpc"
 	sqlstorage "github.com/Faoxis/golang_hw/hw12_13_14_15_calendar/internal/storage/sql"
 	"log"
 	"os"
@@ -81,9 +82,15 @@ func main() {
 
 	logg.Info("calendar is running...")
 
+	go func() {
+		grpcServer := internalgrpc.NewCalendarGRPCServer(logg, config.Server.GRPCPort, calendar)
+		grpcServer.Start(ctx)
+	}()
+
 	if err := server.Start(ctx); err != nil {
 		logg.Error("failed to start http server: " + err.Error())
 		cancel()
 		os.Exit(1) //nolint:gocritic
 	}
+	logg.Info("calendar is stopped")
 }

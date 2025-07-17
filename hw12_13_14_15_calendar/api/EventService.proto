@@ -1,7 +1,35 @@
 syntax = "proto3";
 
 package event;
+import "google/protobuf/timestamp.proto";
+option go_package = "./api;api";
 
-message Event {
-    // TODO
+message CreateEventRequest {
+  string title = 2;
+  google.protobuf.Timestamp startTime = 3;
+  string duration = 4;
+  string description = 5;
+  string userId = 6;
+  string NotifyBefore = 7;
 }
+
+message GetEventRequest {
+  string id = 1;
+}
+
+message EventResponse {
+  string id = 1;
+  string title = 2;
+  google.protobuf.Timestamp startTime = 3;
+  string duration = 4;
+  string description = 5;
+  string userId = 6;
+  string NotifyBefore = 7;
+}
+
+service CalendarService {
+  rpc CreateEvent(CreateEventRequest) returns (EventResponse);
+  rpc GetEvent(GetEventRequest) returns (EventResponse);
+}
+
+
