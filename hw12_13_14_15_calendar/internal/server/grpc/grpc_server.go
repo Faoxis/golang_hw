@@ -168,43 +168,57 @@ func (s *CalendarGRPCServer) GetEvent(ctx context.Context, req *api.GetEventRequ
 	return mapStorageEventToProtoEvent(event), nil
 }
 
-// ListEvents - получение списка событий за период
-func (s *CalendarGRPCServer) ListEvents(ctx context.Context, req *api.ListEventsRequest) (*api.ListEventsResponse, error) {
-	s.logger.Info("gRPC ListEvents called")
-
+// ListEventsForDay - получение событий за день
+func (s *CalendarGRPCServer) ListEventsForDay(ctx context.Context, req *api.ListEventsForDayRequest) (*api.ListEventsResponse, error) {
+	s.logger.Info("gRPC ListEventsForDay called")
 	if req.Date == nil {
 		return nil, status.Error(codes.InvalidArgument, "date is required")
 	}
-
-	if req.Period == "" {
-		return nil, status.Error(codes.InvalidArgument, "period is required")
-	}
-
-	date := req.Date.AsTime()
-	var events []storage.Event
-	var err error
-
-	switch req.Period {
-	case "day":
-		events, err = s.app.ListEventsForDay(ctx, date)
-	case "week":
-		events, err = s.app.ListEventsForWeek(ctx, date)
-	case "month":
-		events, err = s.app.ListEventsForMonth(ctx, date)
-	default:
-		return nil, status.Error(codes.InvalidArgument, "invalid period: must be 'day', 'week', or 'month'")
-	}
-
+	events, err := s.app.ListEventsForDay(ctx, req.Date.AsTime())
 	if err != nil {
-		s.logger.Error("Failed to list events: " + err.Error())
-		return nil, status.Error(codes.Internal, "failed to list events")
+		s.logger.Error("Failed to list events for day: " + err.Error())
+		return nil, status.Error(codes.Internal, "failed to list events for day")
 	}
-
 	protoEvents := make([]*api.EventResponse, 0, len(events))
 	for _, event := range events {
 		protoEvents = append(protoEvents, mapStorageEventToProtoEvent(event))
 	}
+	return &api.ListEventsResponse{Events: protoEvents}, nil
+}
 
+// ListEventsForWeek - получение событий за неделю
+func (s *CalendarGRPCServer) ListEventsForWeek(ctx context.Context, req *api.ListEventsForWeekRequest) (*api.ListEventsResponse, error) {
+	s.logger.Info("gRPC ListEventsForWeek called")
+	if req.Date == nil {
+		return nil, status.Error(codes.InvalidArgument, "date is required")
+	}
+	events, err := s.app.ListEventsForWeek(ctx, req.Date.AsTime())
+	if err != nil {
+		s.logger.Error("Failed to list events for week: " + err.Error())
+		return nil, status.Error(codes.Internal, "failed to list events for week")
+	}
+	protoEvents := make([]*api.EventResponse, 0, len(events))
+	for _, event := range events {
+		protoEvents = append(protoEvents, mapStorageEventToProtoEvent(event))
+	}
+	return &api.ListEventsResponse{Events: protoEvents}, nil
+}
+
+// ListEventsForMonth - получение событий за месяц
+func (s *CalendarGRPCServer) ListEventsForMonth(ctx context.Context, req *api.ListEventsForMonthRequest) (*api.ListEventsResponse, error) {
+	s.logger.Info("gRPC ListEventsForMonth called")
+	if req.Date == nil {
+		return nil, status.Error(codes.InvalidArgument, "date is required")
+	}
+	events, err := s.app.ListEventsForMonth(ctx, req.Date.AsTime())
+	if err != nil {
+		s.logger.Error("Failed to list events for month: " + err.Error())
+		return nil, status.Error(codes.Internal, "failed to list events for month")
+	}
+	protoEvents := make([]*api.EventResponse, 0, len(events))
+	for _, event := range events {
+		protoEvents = append(protoEvents, mapStorageEventToProtoEvent(event))
+	}
 	return &api.ListEventsResponse{Events: protoEvents}, nil
 }
 

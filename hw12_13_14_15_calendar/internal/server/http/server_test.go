@@ -185,6 +185,84 @@ func TestListEventsForDay(t *testing.T) {
 	assert.Equal(t, "Today Event", response[0].Title)
 }
 
+func TestListEventsForDayEndpoint(t *testing.T) {
+	ts, calendar := setupTestServer(t)
+	defer ts.Close()
+
+	today := time.Now().Truncate(24 * time.Hour)
+	err := calendar.CreateEvent(
+		context.Background(),
+		"event1", "Today Event", "Description", "user123",
+		today.Add(10*time.Hour),
+		calendar_types.CalendarDuration(time.Hour),
+		calendar_types.CalendarDuration(15*time.Minute),
+	)
+	require.NoError(t, err)
+
+	dateStr := today.Format("2006-01-02")
+	resp, err := http.Get(fmt.Sprintf("%s/events/day?date=%s", ts.URL, dateStr))
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	var response []EventResponse
+	err = json.NewDecoder(resp.Body).Decode(&response)
+	require.NoError(t, err)
+	assert.Len(t, response, 1)
+	assert.Equal(t, "Today Event", response[0].Title)
+}
+
+func TestListEventsForWeekEndpoint(t *testing.T) {
+	ts, calendar := setupTestServer(t)
+	defer ts.Close()
+
+	today := time.Now().Truncate(24 * time.Hour)
+	err := calendar.CreateEvent(
+		context.Background(),
+		"event1", "Week Event", "Description", "user123",
+		today.Add(10*time.Hour),
+		calendar_types.CalendarDuration(time.Hour),
+		calendar_types.CalendarDuration(15*time.Minute),
+	)
+	require.NoError(t, err)
+
+	dateStr := today.Format("2006-01-02")
+	resp, err := http.Get(fmt.Sprintf("%s/events/week?date=%s", ts.URL, dateStr))
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	var response []EventResponse
+	err = json.NewDecoder(resp.Body).Decode(&response)
+	require.NoError(t, err)
+	assert.Len(t, response, 1)
+	assert.Equal(t, "Week Event", response[0].Title)
+}
+
+func TestListEventsForMonthEndpoint(t *testing.T) {
+	ts, calendar := setupTestServer(t)
+	defer ts.Close()
+
+	today := time.Now().Truncate(24 * time.Hour)
+	err := calendar.CreateEvent(
+		context.Background(),
+		"event1", "Month Event", "Description", "user123",
+		today.Add(10*time.Hour),
+		calendar_types.CalendarDuration(time.Hour),
+		calendar_types.CalendarDuration(15*time.Minute),
+	)
+	require.NoError(t, err)
+
+	dateStr := today.Format("2006-01-02")
+	resp, err := http.Get(fmt.Sprintf("%s/events/month?date=%s", ts.URL, dateStr))
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	var response []EventResponse
+	err = json.NewDecoder(resp.Body).Decode(&response)
+	require.NoError(t, err)
+	assert.Len(t, response, 1)
+	assert.Equal(t, "Month Event", response[0].Title)
+}
+
 func TestInvalidDateFormat(t *testing.T) {
 	ts, _ := setupTestServer(t)
 	defer ts.Close()

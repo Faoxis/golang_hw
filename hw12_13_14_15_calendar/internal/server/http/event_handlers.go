@@ -2,6 +2,7 @@ package internalhttp
 
 import (
 	"fmt"
+
 	"github.com/Faoxis/golang_hw/hw12_13_14_15_calendar/internal/server"
 
 	"net/http"
@@ -159,6 +160,11 @@ func addNewEvent(app server.Application, logger server.Logger) http.HandlerFunc 
 			return
 		}
 		savedEvent, err := app.GetEventByID(r.Context(), id)
+		if err != nil {
+			logger.Warn(fmt.Sprintf("Failed to get event: %v", err))
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 		err = sendInResponse(
 			w,
 			mapStorageEventToEventResponse(savedEvent),
@@ -166,6 +172,105 @@ func addNewEvent(app server.Application, logger server.Logger) http.HandlerFunc 
 		)
 		if err != nil {
 			logger.Warn("Failed to write response")
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+	}
+}
+
+func getEventsForDay(app server.Application, logger server.Logger) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		dateStr := r.URL.Query().Get("date")
+		if dateStr == "" {
+			logger.Warn("missing date param")
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		date, err := time.Parse("2006-01-02", dateStr)
+		if err != nil {
+			logger.Warn("invalid date param: " + dateStr)
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		events, err := app.ListEventsForDay(r.Context(), date)
+		if err != nil {
+			logger.Error("error getting events for day: " + err.Error())
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		responseEvents := make([]EventResponse, 0, len(events))
+		for _, event := range events {
+			responseEvents = append(responseEvents, mapStorageEventToEventResponse(event))
+		}
+		err = sendInResponse(w, responseEvents, http.StatusOK)
+		if err != nil {
+			logger.Warn("send response error: " + err.Error())
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+	}
+}
+
+func getEventsForWeek(app server.Application, logger server.Logger) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		dateStr := r.URL.Query().Get("date")
+		if dateStr == "" {
+			logger.Warn("missing date param")
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		date, err := time.Parse("2006-01-02", dateStr)
+		if err != nil {
+			logger.Warn("invalid date param: " + dateStr)
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		events, err := app.ListEventsForWeek(r.Context(), date)
+		if err != nil {
+			logger.Error("error getting events for week: " + err.Error())
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		responseEvents := make([]EventResponse, 0, len(events))
+		for _, event := range events {
+			responseEvents = append(responseEvents, mapStorageEventToEventResponse(event))
+		}
+		err = sendInResponse(w, responseEvents, http.StatusOK)
+		if err != nil {
+			logger.Warn("send response error: " + err.Error())
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+	}
+}
+
+func getEventsForMonth(app server.Application, logger server.Logger) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		dateStr := r.URL.Query().Get("date")
+		if dateStr == "" {
+			logger.Warn("missing date param")
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		date, err := time.Parse("2006-01-02", dateStr)
+		if err != nil {
+			logger.Warn("invalid date param: " + dateStr)
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		events, err := app.ListEventsForMonth(r.Context(), date)
+		if err != nil {
+			logger.Error("error getting events for month: " + err.Error())
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		responseEvents := make([]EventResponse, 0, len(events))
+		for _, event := range events {
+			responseEvents = append(responseEvents, mapStorageEventToEventResponse(event))
+		}
+		err = sendInResponse(w, responseEvents, http.StatusOK)
+		if err != nil {
+			logger.Warn("send response error: " + err.Error())
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}

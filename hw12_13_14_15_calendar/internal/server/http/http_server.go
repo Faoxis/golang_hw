@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/Faoxis/golang_hw/hw12_13_14_15_calendar/internal/server"
 	"net/http"
 	"time"
+
+	"github.com/Faoxis/golang_hw/hw12_13_14_15_calendar/internal/server"
 
 	"github.com/go-chi/chi/v5/middleware"
 
@@ -34,7 +35,10 @@ func NewServer(logger server.Logger, host string, port int, app server.Applicati
 		_, _ = w.Write([]byte("Hello, World!"))
 	})
 	router.Route("/events", func(router route.Router) {
-		router.Get("/", getEvents(app, logger))
+		router.Get("/day", getEventsForDay(app, logger))
+		router.Get("/week", getEventsForWeek(app, logger))
+		router.Get("/month", getEventsForMonth(app, logger))
+		router.Get("/", getEvents(app, logger)) // старый универсальный, можно оставить для обратной совместимости
 		router.Post("/", addNewEvent(app, logger))
 		router.Get("/{id}", getEvent(app, logger))
 		router.Put("/{id}", updateEvent(app, logger))

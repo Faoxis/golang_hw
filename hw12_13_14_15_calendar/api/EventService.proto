@@ -36,9 +36,14 @@ message GetEventRequest {
   string id = 1;
 }
 
-message ListEventsRequest {
+message ListEventsForDayRequest {
   google.protobuf.Timestamp date = 1;
-  string period = 2; // "day", "week", "month"
+}
+message ListEventsForWeekRequest {
+  google.protobuf.Timestamp date = 1;
+}
+message ListEventsForMonthRequest {
+  google.protobuf.Timestamp date = 1;
 }
 
 message ListEventsResponse {
@@ -60,7 +65,9 @@ service CalendarService {
   rpc UpdateEvent(UpdateEventRequest) returns (EventResponse);
   rpc DeleteEvent(DeleteEventRequest) returns (DeleteEventResponse);
   rpc GetEvent(GetEventRequest) returns (EventResponse);
-  rpc ListEvents(ListEventsRequest) returns (ListEventsResponse);
+  rpc ListEventsForDay(ListEventsForDayRequest) returns (ListEventsResponse);
+  rpc ListEventsForWeek(ListEventsForWeekRequest) returns (ListEventsResponse);
+  rpc ListEventsForMonth(ListEventsForMonthRequest) returns (ListEventsResponse);
 }
 
 

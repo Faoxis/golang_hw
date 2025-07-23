@@ -141,11 +141,10 @@ func TestListEventsForDay(t *testing.T) {
 	require.NoError(t, err)
 
 	// Получаем события за день
-	req := &api.ListEventsRequest{
-		Date:   timestamppb.New(today),
-		Period: "day",
+	req := &api.ListEventsForDayRequest{
+		Date: timestamppb.New(today),
 	}
-	resp, err := server.ListEvents(context.Background(), req)
+	resp, err := server.ListEventsForDay(context.Background(), req)
 	require.NoError(t, err)
 
 	assert.Len(t, resp.Events, 1)
@@ -167,11 +166,10 @@ func TestListEventsForWeek(t *testing.T) {
 	require.NoError(t, err)
 
 	// Получаем события за неделю
-	req := &api.ListEventsRequest{
-		Date:   timestamppb.New(today),
-		Period: "week",
+	req := &api.ListEventsForWeekRequest{
+		Date: timestamppb.New(today),
 	}
-	resp, err := server.ListEvents(context.Background(), req)
+	resp, err := server.ListEventsForWeek(context.Background(), req)
 	require.NoError(t, err)
 
 	assert.Len(t, resp.Events, 1)
@@ -193,11 +191,10 @@ func TestListEventsForMonth(t *testing.T) {
 	require.NoError(t, err)
 
 	// Получаем события за месяц
-	req := &api.ListEventsRequest{
-		Date:   timestamppb.New(today),
-		Period: "month",
+	req := &api.ListEventsForMonthRequest{
+		Date: timestamppb.New(today),
 	}
-	resp, err := server.ListEvents(context.Background(), req)
+	resp, err := server.ListEventsForMonth(context.Background(), req)
 	require.NoError(t, err)
 
 	assert.Len(t, resp.Events, 1)
