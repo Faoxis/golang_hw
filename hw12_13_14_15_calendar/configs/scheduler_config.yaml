@@ -1,13 +1,4 @@
-logger:
-  level: debug
-
-server:
-  host: "localhost"
-  port: 8080
-  grpc_port: :6523
-
 storage:
-  type: database # can be memory
   host: localhost
   port: 5434
   user: calendar_user
@@ -15,4 +6,6 @@ storage:
   database: calendar
   sslmode: disable
 
+#rabbitmq:
+#
 
