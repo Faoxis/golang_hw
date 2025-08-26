@@ -8,8 +8,26 @@ import (
 )
 
 type SchedulerConfig struct {
-	Logger  Logger
-	Storage Storage
+	Logger     Logger
+	Storage    Storage
+	Rabbit     Rabbit
+	EventQueue EventQueue `yaml:"event-queue"`
+	Scheduler  SchedulerSettings
+}
+
+type EventQueue struct {
+	Name     string
+	Exchange string
+}
+
+type SchedulerSettings struct {
+	CheckInterval string `yaml:"check-interval"`
+}
+
+type Rabbit struct {
+	Url      string
+	Username string
+	Password string
 }
 
 type Storage struct {
