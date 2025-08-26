@@ -3,10 +3,11 @@ package memorystorage
 import (
 	"context"
 	"errors"
-	"github.com/Faoxis/golang_hw/hw12_13_14_15_calendar/internal/app"
-	"github.com/Faoxis/golang_hw/hw12_13_14_15_calendar/internal/storage"
 	"sync"
 	"time"
+
+	"github.com/Faoxis/golang_hw/hw12_13_14_15_calendar/internal/app"
+	"github.com/Faoxis/golang_hw/hw12_13_14_15_calendar/internal/storage"
 )
 
 type Storage struct {

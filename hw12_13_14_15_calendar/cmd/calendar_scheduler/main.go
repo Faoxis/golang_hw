@@ -1,13 +1,20 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"log"
+	"os"
+	"os/signal"
 	"path/filepath"
+	"syscall"
 
 	"github.com/Faoxis/golang_hw/hw12_13_14_15_calendar/internal/app"
 	"github.com/Faoxis/golang_hw/hw12_13_14_15_calendar/internal/logger"
+	"github.com/Faoxis/golang_hw/hw12_13_14_15_calendar/internal/queue/rabbit"
+	"github.com/Faoxis/golang_hw/hw12_13_14_15_calendar/internal/scheduler"
+	"github.com/Faoxis/golang_hw/hw12_13_14_15_calendar/internal/storage"
 	sqlstorage "github.com/Faoxis/golang_hw/hw12_13_14_15_calendar/internal/storage/sql"
 )
 
@@ -22,38 +29,58 @@ func main() {
 
 	fmt.Println("Starting calendar scheduler")
 
-	// Загружаем конфигурацию
 	config, err := LoadConfig(configFile)
 	if err != nil {
-		log.Fatalf("Error: loading config from file %d", err)
+		log.Fatalf("Error: loading config from file %v", err)
 	}
 
-	// Инициализируем логгер
 	logg := logger.New(config.Logger.Level)
 
-	_, err = initDatabaseStorage(config, logg)
+	notificationStorage, err := initNotificationStorage(config, logg)
 	if err != nil {
-		log.Fatalf("Error: initializing database storage %d", err)
+		log.Fatalf("Error: initializing notification storage %v", err)
 	}
+	defer notificationStorage.Close()
 
+	queue, err := rabbit.NewRabbitQueue[storage.Notification](
+		config.Rabbit.Url,
+		config.Rabbit.Username,
+		config.Rabbit.Password,
+		logg,
+	)
+	if err != nil {
+		log.Fatalf("Error: creating rabbit queue %v", err)
+	}
+	defer queue.Close()
+
+	scheduler := scheduler.NewScheduler(logg, notificationStorage, queue, config.EventQueue.Name, config.EventQueue.Exchange, config.Scheduler.CheckInterval)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+
+	go scheduler.Start(ctx)
+
+	<-sigChan
+	fmt.Println("Scheduler stopped")
 }
 
-func initDatabaseStorage(config *SchedulerConfig, logg app.Logger) (app.Storage, error) {
+func initNotificationStorage(config *SchedulerConfig, logg app.Logger) (scheduler.NotificationStorage, error) {
 	migrationsPath, err := filepath.Abs("./migrations")
 	if err != nil {
 		return nil, fmt.Errorf("failed to get migrations path: %w", err)
 	}
 
-	// Выполняем миграции
 	if err := sqlstorage.RunMigrations(config.Storage.GetPostgresDSN(), migrationsPath); err != nil {
 		return nil, fmt.Errorf("migrations failed: %w", err)
 	}
 
-	// Создаем хранилище
-	storage, err := sqlstorage.New(config.Storage.GetPostgresDSN(), logg)
+	notificationStorage, err := scheduler.NewSQLNotificationStorage(config.Storage.GetPostgresDSN(), logg)
 	if err != nil {
-		return nil, fmt.Errorf("sql storage failed: %w", err)
+		return nil, fmt.Errorf("sql notification storage failed: %w", err)
 	}
 
-	return storage, nil
+	return notificationStorage, nil
 }

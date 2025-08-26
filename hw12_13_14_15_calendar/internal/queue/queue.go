@@ -1,11 +1,16 @@
 package queue
 
-type MessageQueue struct {
+import (
+	"context"
+)
+
+type MessageQueue[T any] struct {
 	ID   string
-	body any
+	Body T
 }
 
-type Queue interface {
-	put(queue string, exchange string, message MessageQueue) error
-	get(queue string) (MessageQueue, error)
+type Queue[T any] interface {
+	Put(queue string, exchange string, message MessageQueue[T]) error
+	Get(context context.Context, queueName string) (<-chan MessageQueue[T], <-chan error)
+	Close() error
 }

@@ -6,6 +6,14 @@ storage:
   database: calendar
   sslmode: disable
 
-#rabbitmq:
-#
+rabbit:
+  url: localhost:5672
+  username: calendar_user
+  password: calendar_pass
 
+event-queue:
+  name: events
+  exchange: events
+
+scheduler:
+  check-interval: 1m
