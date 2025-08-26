@@ -56,4 +56,27 @@ logs:
 integration-tests:
 	cd env && docker-compose -f docker-compose.yml -f docker-compose.test.yml up --build --abort-on-container-exit --exit-code-from integration-tests
 
-.PHONY: build run build-img run-img version test lint lint-docker generate up down logs integration-tests
+# Kubernetes commands
+k8s-apply:
+	kubectl apply -f k8s/
+
+k8s-delete:
+	kubectl delete -f k8s/
+
+k8s-status:
+	kubectl get all -n calendar
+
+# Helm commands
+helm-install:
+	helm install calendar ./helm/calendar
+
+helm-upgrade:
+	helm upgrade calendar ./helm/calendar
+
+helm-uninstall:
+	helm uninstall calendar
+
+helm-status:
+	helm status calendar
+
+.PHONY: build run build-img run-img version test lint lint-docker generate up down logs integration-tests k8s-apply k8s-delete k8s-status helm-install helm-upgrade helm-uninstall helm-status

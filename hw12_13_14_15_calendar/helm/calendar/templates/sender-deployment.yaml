@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: calendar-sender
+  namespace: {{ .Values.global.namespace }}
+spec:
+  replicas: {{ .Values.sender.replicas }}
+  selector:
+    matchLabels:
+      app: calendar-sender
+  template:
+    metadata:
+      labels:
+        app: calendar-sender
+    spec:
+      containers:
+      - name: calendar-sender
+        image: {{ .Values.image.repository }}-sender:{{ .Values.image.tag }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        env:
+        - name: RABBITMQ_HOST
+          value: rabbitmq-service
+        - name: RABBITMQ_PORT
+          value: "5672"
+        - name: RABBITMQ_USER
+          value: calendar_user
+        - name: RABBITMQ_PASS
+          valueFrom:
+            secretKeyRef:
+              name: rabbitmq-secret
+              key: password
+        volumeMounts:
+        - name: config-volume
+          mountPath: /app/sender_config.yaml
+          subPath: sender-config.yaml
+        resources:
+          {{- toYaml .Values.sender.resources | nindent 12 }}
+      volumes:
+      - name: config-volume
+        configMap:
+          name: calendar-config
