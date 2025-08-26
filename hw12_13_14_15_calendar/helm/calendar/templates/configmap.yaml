@@ -1,0 +1,52 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: calendar-config
+  namespace: {{ .Values.global.namespace }}
+data:
+  calendar-config.yml: |
+    logger:
+      level: {{ .Values.config.logLevel }}
+    server:
+      host: 0.0.0.0
+      port: {{ .Values.api.port }}
+      grpc_port: :6523
+    storage:
+      type: database
+      host: postgres-service
+      port: 5432
+      user: calendar_user
+      password: ${POSTGRES_PASSWORD}
+      database: calendar
+      sslmode: disable
+
+  scheduler-config.yaml: |
+    logger:
+      level: {{ .Values.config.logLevel }}
+    storage:
+      host: postgres-service
+      port: 5432
+      user: calendar_user
+      password: ${POSTGRES_PASSWORD}
+      database: calendar
+      sslmode: disable
+    rabbit:
+      url: rabbitmq-service:5672
+      username: calendar_user
+      password: ${RABBITMQ_PASSWORD}
+    event-queue:
+      name: {{ .Values.config.eventQueueName }}
+      exchange: {{ .Values.config.eventQueueExchange }}
+    scheduler:
+      check-interval: {{ .Values.config.schedulerCheckInterval }}
+
+  sender-config.yaml: |
+    logger:
+      level: {{ .Values.config.logLevel }}
+    rabbit:
+      url: rabbitmq-service:5672
+      username: calendar_user
+      password: ${RABBITMQ_PASSWORD}
+    event-queue:
+      name: {{ .Values.config.eventQueueName }}
+      exchange: {{ .Values.config.eventQueueExchange }}

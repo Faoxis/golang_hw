@@ -1,0 +1,129 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:17
+    container_name: calendar_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: calendar
+      POSTGRES_USER: calendar_user
+      POSTGRES_PASSWORD: calendar_pass
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "calendar_user"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: calendar_rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"   # AMQP
+      - "15672:15672" # Web UI
+    environment:
+      RABBITMQ_DEFAULT_USER: calendar_user
+      RABBITMQ_DEFAULT_PASS: calendar_pass
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  migrations:
+    image: postgres:17
+    container_name: calendar_migrations
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      POSTGRES_DB: calendar
+      POSTGRES_USER: calendar_user
+      POSTGRES_PASSWORD: calendar_pass
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+    volumes:
+      - ./migrations:/migrations
+    command: >
+      sh -c "
+        echo 'Waiting for postgres...'
+        while ! pg_isready -h postgres -p 5432 -U calendar_user; do
+          sleep 1
+        done
+        echo 'PostgreSQL started'
+        echo 'Running migrations...'
+        psql -h postgres -U calendar_user -d calendar -f /migrations/001_create_events_table.up.sql
+        echo 'Migrations completed'
+      "
+
+  calendar:
+    build:
+      context: .
+      dockerfile: build/Dockerfile.calendar
+    container_name: calendar_api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrations:
+        condition: service_completed_successfully
+    ports:
+      - "8888:8888"
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=calendar_user
+      - POSTGRES_PASSWORD=calendar_pass
+      - POSTGRES_DB=calendar
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8888/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  calendar_scheduler:
+    build:
+      context: .
+      dockerfile: build/Dockerfile.scheduler
+    container_name: calendar_scheduler
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      migrations:
+        condition: service_completed_successfully
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=calendar_user
+      - POSTGRES_PASSWORD=calendar_pass
+      - POSTGRES_DB=calendar
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=calendar_user
+      - RABBITMQ_PASS=calendar_pass
+
+  calendar_sender:
+    build:
+      context: .
+      dockerfile: build/Dockerfile.sender
+    container_name: calendar_sender
+    restart: unless-stopped
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=calendar_user
+      - RABBITMQ_PASS=calendar_pass
+
+volumes:
+  postgres_data:
