@@ -1,0 +1,19 @@
+storage:
+  host: localhost
+  port: 5434
+  user: calendar_user
+  password: calendar_pass
+  database: calendar
+  sslmode: disable
+
+rabbit:
+  url: localhost:5672
+  username: calendar_user
+  password: calendar_pass
+
+event-queue:
+  name: events
+  exchange: events
+
+scheduler:
+  check-interval: 1m

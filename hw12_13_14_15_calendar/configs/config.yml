@@ -7,7 +7,7 @@ server:
   grpc_port: :6523
 
 storage:
-  type: database
+  type: database # can be memory
   host: localhost
   port: 5434
   user: calendar_user
@@ -15,5 +15,4 @@ storage:
   database: calendar
   sslmode: disable
 
-#  type: memory
-#  dsn: ""
+
