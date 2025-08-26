@@ -2,11 +2,12 @@ package internalhttp
 
 import (
 	"fmt"
+	"github.com/Faoxis/golang_hw/hw12_13_14_15_calendar/internal/server"
 	"net/http"
 	"time"
 )
 
-func loggingMiddleware(logger Logger, next http.Handler) http.Handler { //nolint:unused
+func loggingMiddleware(logger server.Logger, next http.Handler) http.Handler { //nolint:unused
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 
