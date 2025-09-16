@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 
 	"github.com/Faoxis/golang_hw/hw12_13_14_15_calendar/internal/app"
@@ -14,6 +15,7 @@ import (
 	"github.com/Faoxis/golang_hw/hw12_13_14_15_calendar/internal/queue/rabbit"
 	"github.com/Faoxis/golang_hw/hw12_13_14_15_calendar/internal/scheduler"
 	"github.com/Faoxis/golang_hw/hw12_13_14_15_calendar/internal/storage"
+	sqlstorage "github.com/Faoxis/golang_hw/hw12_13_14_15_calendar/internal/storage/sql"
 )
 
 var configFile string
@@ -66,7 +68,15 @@ func main() {
 }
 
 func initNotificationStorage(config *SchedulerConfig, logg app.Logger) (scheduler.NotificationStorage, error) {
-	// Создаем notification storage (миграции выполняются отдельным контейнером)
+	migrationsPath, err := filepath.Abs("./migrations")
+	if err != nil {
+		return nil, fmt.Errorf("failed to get migrations path: %w", err)
+	}
+
+	if err := sqlstorage.RunMigrations(config.Storage.GetPostgresDSN(), migrationsPath); err != nil {
+		return nil, fmt.Errorf("migrations failed: %w", err)
+	}
+
 	notificationStorage, err := scheduler.NewSQLNotificationStorage(config.Storage.GetPostgresDSN(), logg)
 	if err != nil {
 		return nil, fmt.Errorf("sql notification storage failed: %w", err)

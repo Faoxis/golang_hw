@@ -31,14 +31,7 @@ func NewRabbitQueue[T any](url, username, password string, logger app.Logger) (q
 }
 
 func connectToRabbitMQ(url, username, password string) (*amqp.Connection, *amqp.Channel, error) {
-	// If url already contains the full AMQP URL, use it directly
-	// Otherwise, construct it from components
-	var amqpURL string
-	if len(url) > 5 && url[:5] == "amqp:" {
-		amqpURL = url
-	} else {
-		amqpURL = fmt.Sprintf("amqp://%s:%s@%s/", username, password, url)
-	}
+	amqpURL := fmt.Sprintf("amqp://%s:%s@%s/", username, password, url)
 	conn, err := amqp.Dial(amqpURL)
 	if err != nil {
 		return nil, nil, err

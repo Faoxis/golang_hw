@@ -8,7 +8,7 @@ import (
 
 	"github.com/Faoxis/golang_hw/hw12_13_14_15_calendar/internal/app"
 	"github.com/Faoxis/golang_hw/hw12_13_14_15_calendar/internal/storage"
-	_ "github.com/jackc/pgx/v5/stdlib"
+	_ "github.com/jackc/pgx/v5"
 )
 
 type SQLNotificationStorage struct {
@@ -17,7 +17,7 @@ type SQLNotificationStorage struct {
 }
 
 func NewSQLNotificationStorage(dsn string, logger app.Logger) (NotificationStorage, error) {
-	db, err := sql.Open("pgx", dsn)
+	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("cannot open db: %w", err)
 	}
@@ -38,8 +38,8 @@ func (ns *SQLNotificationStorage) GetEventsForNotification(ctx context.Context, 
 	query := `
 		SELECT id, title, description, start_time, duration, user_id, notify_before
 		FROM events 
-		WHERE (start_time - INTERVAL '1 second' * notify_before) >= $1 
-		AND (start_time - INTERVAL '1 second' * notify_before) <= $2 
+		WHERE (start_time - make_interval(secs => notify_before)) >= $1 
+		AND (start_time - make_interval(secs => notify_before)) <= $2 
 		AND notify_before > 0
 		ORDER BY start_time
 	`
@@ -88,7 +88,7 @@ func (ns *SQLNotificationStorage) MarkEventNotified(ctx context.Context, eventID
 func (ns *SQLNotificationStorage) CleanOldEvents(ctx context.Context) error {
 	oneYearAgo := time.Now().AddDate(-1, 0, 0)
 
-	query := `DELETE FROM events WHERE (start_time + INTERVAL '1 second' * duration) < $1`
+	query := `DELETE FROM events WHERE (start_time + make_interval(secs => duration)) < $1`
 
 	result, err := ns.db.ExecContext(ctx, query, oneYearAgo)
 	if err != nil {
