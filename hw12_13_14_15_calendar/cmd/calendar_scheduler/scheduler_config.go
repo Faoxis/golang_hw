@@ -21,7 +21,7 @@ type EventQueue struct {
 }
 
 type SchedulerSettings struct {
-	CheckInterval string `yaml:"check_interval"`
+	CheckInterval string `yaml:"check-interval"`
 }
 
 type Rabbit struct {

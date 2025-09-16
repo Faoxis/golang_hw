@@ -9,7 +9,7 @@ import (
 
 	"github.com/Faoxis/golang_hw/hw12_13_14_15_calendar/internal/app"
 	"github.com/Faoxis/golang_hw/hw12_13_14_15_calendar/internal/storage"
-	_ "github.com/jackc/pgx/v5/stdlib"
+	_ "github.com/jackc/pgx/v5"
 )
 
 type Storage struct {
@@ -121,7 +121,7 @@ func (strg *Storage) listEvents(ctx context.Context, start time.Time, end time.T
 }
 
 func New(dsn string, logger app.Logger) (app.Storage, error) {
-	db, err := sql.Open("pgx", dsn)
+	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("cannot open db: %w", err)
 	}

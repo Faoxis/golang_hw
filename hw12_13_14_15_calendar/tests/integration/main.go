@@ -72,8 +72,7 @@ func waitForAPI() {
 		}
 		time.Sleep(2 * time.Second)
 	}
-	fmt.Println("API is not available after 60 seconds")
-	os.Exit(1)
+	panic("API is not available after 60 seconds")
 }
 
 func TestIntegration(t *testing.T) {
