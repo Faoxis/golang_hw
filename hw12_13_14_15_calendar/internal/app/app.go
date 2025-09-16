@@ -2,8 +2,9 @@ package app
 
 import (
 	"context"
-	"github.com/Faoxis/golang_hw/hw12_13_14_15_calendar/internal/calendar_types"
 	"time"
+
+	"github.com/Faoxis/golang_hw/hw12_13_14_15_calendar/internal/calendar_types"
 
 	"github.com/Faoxis/golang_hw/hw12_13_14_15_calendar/internal/storage"
 )
