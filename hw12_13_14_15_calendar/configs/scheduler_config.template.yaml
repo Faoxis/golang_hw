@@ -19,4 +19,4 @@ event-queue:
   exchange: ${EVENT_QUEUE_EXCHANGE:-events}
 
 scheduler:
-  check-interval: ${SCHEDULER_CHECK_INTERVAL:-1m}
+  check_interval: ${SCHEDULER_CHECK_INTERVAL:-1m}
