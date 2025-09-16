@@ -42,4 +42,18 @@ lint-docker:
 generate:
 	protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative api/EventService.proto
 
-.PHONY: build run build-img run-img version test lint lint-docker generate
+# Docker Compose commands
+up:
+	cd env && docker-compose up -d
+
+down:
+	cd env && docker-compose down
+
+logs:
+	cd env && docker-compose logs -f
+
+# Integration tests
+integration-tests:
+	cd env && docker-compose -f docker-compose.yml -f docker-compose.test.yml up --build --abort-on-container-exit --exit-code-from integration-tests
+
+.PHONY: build run build-img run-img version test lint lint-docker generate up down logs integration-tests

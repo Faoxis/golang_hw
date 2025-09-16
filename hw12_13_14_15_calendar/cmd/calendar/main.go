@@ -7,7 +7,6 @@ import (
 	"log"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"syscall"
 	"time"
 
@@ -89,19 +88,9 @@ func initStorage(config *Config, logg app.Logger) (app.Storage, error) {
 	}
 }
 
-// initDatabaseStorage инициализирует базу данных и выполняет миграции
+// initDatabaseStorage инициализирует базу данных
 func initDatabaseStorage(config *Config, logg app.Logger) (app.Storage, error) {
-	migrationsPath, err := filepath.Abs("./migrations")
-	if err != nil {
-		return nil, fmt.Errorf("failed to get migrations path: %w", err)
-	}
-
-	// Выполняем миграции
-	if err := sqlstorage.RunMigrations(config.Storage.GetPostgresDSN(), migrationsPath); err != nil {
-		return nil, fmt.Errorf("migrations failed: %w", err)
-	}
-
-	// Создаем хранилище
+	// Создаем хранилище (миграции выполняются отдельным контейнером)
 	storage, err := sqlstorage.New(config.Storage.GetPostgresDSN(), logg)
 	if err != nil {
 		return nil, fmt.Errorf("sql storage failed: %w", err)

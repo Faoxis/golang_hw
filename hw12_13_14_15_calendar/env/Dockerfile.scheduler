@@ -1,0 +1,39 @@
+FROM golang:1.25-alpine AS builder
+
+WORKDIR /app
+
+# Копируем go mod файлы
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Копируем исходный код
+COPY . .
+
+# Собираем приложение
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o calendar_scheduler ./cmd/calendar_scheduler
+
+# Финальный образ
+FROM alpine:latest
+
+RUN apk --no-cache add ca-certificates
+
+WORKDIR /root/
+
+# Копируем бинарный файл
+COPY --from=builder /app/calendar_scheduler .
+
+# Копируем шаблон конфигурации
+COPY configs/scheduler_config.template.yaml ./scheduler_config.template.yaml
+
+# Копируем миграции
+COPY migrations ./migrations
+
+# Устанавливаем envsubst
+RUN apk add --no-cache gettext
+
+# Скрипт запуска
+COPY env/start-scheduler.sh ./start-scheduler.sh
+RUN chmod +x ./start-scheduler.sh
+
+# Запускаем приложение
+CMD ["./start-scheduler.sh"]
