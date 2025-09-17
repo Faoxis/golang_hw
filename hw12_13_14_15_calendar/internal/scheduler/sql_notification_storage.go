@@ -38,9 +38,9 @@ func (ns *SQLNotificationStorage) GetEventsForNotification(ctx context.Context, 
 	query := `
 		SELECT id, title, description, start_time, duration, user_id, notify_before
 		FROM events 
-		WHERE (start_time - make_interval(secs => notify_before)) >= $1 
-		AND (start_time - make_interval(secs => notify_before)) <= $2 
-		AND notify_before > 0
+		WHERE (start_time - notify_before) >= $1 
+		AND (start_time - notify_before) <= $2 
+		AND notify_before > interval '0'
 		ORDER BY start_time
 	`
 
@@ -68,7 +68,7 @@ func (ns *SQLNotificationStorage) GetEventsForNotification(ctx context.Context, 
 
 func (ns *SQLNotificationStorage) MarkEventNotified(ctx context.Context, eventID string) error {
 	// Устанавливаем notify_before в 0, чтобы событие больше не попадало в выборку
-	query := `UPDATE events SET notify_before = 0 WHERE id = $1`
+	query := `UPDATE events SET notify_before = interval '0' WHERE id = $1`
 
 	result, err := ns.db.ExecContext(ctx, query, eventID)
 	if err != nil {
@@ -88,7 +88,7 @@ func (ns *SQLNotificationStorage) MarkEventNotified(ctx context.Context, eventID
 func (ns *SQLNotificationStorage) CleanOldEvents(ctx context.Context) error {
 	oneYearAgo := time.Now().AddDate(-1, 0, 0)
 
-	query := `DELETE FROM events WHERE (start_time + make_interval(secs => duration)) < $1`
+	query := `DELETE FROM events WHERE (start_time + duration) < $1`
 
 	result, err := ns.db.ExecContext(ctx, query, oneYearAgo)
 	if err != nil {

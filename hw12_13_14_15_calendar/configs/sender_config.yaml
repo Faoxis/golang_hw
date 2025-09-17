@@ -2,7 +2,7 @@ logger:
   level: debug
 
 rabbit:
-  url: localhost:5672
+  url: rabbitmq-service:5672
   username: calendar_user
   password: calendar_pass
 

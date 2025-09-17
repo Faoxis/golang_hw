@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: scheduler-config
+  namespace: calendar
+data:
+  scheduler-config.yaml: |
+    logger:
+      level: debug
+    storage:
+      host: postgres-service
+      port: 5432
+      user: calendar_user
+      password: calendar_pass
+      database: calendar
+      sslmode: disable
+    rabbit:
+      url: rabbitmq-service:5672
+      username: calendar_user
+      password: calendar_pass
+    event-queue:
+      name: events
+      exchange: events
+    scheduler:
+      check-interval: 1m

@@ -26,8 +26,8 @@ spec:
         - name: POSTGRES_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: calendar-secrets
-              key: postgres-password
+              name: postgres-secret
+              key: password
         volumeMounts:
         - name: postgres-storage
           mountPath: /var/lib/postgresql/data

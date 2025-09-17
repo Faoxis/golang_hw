@@ -22,8 +22,11 @@ WORKDIR /root/
 # Копируем бинарный файл
 COPY --from=builder /app/calendar .
 
-# Копируем шаблон конфигурации
-COPY configs/config.template.yml ./config.template.yml
+# Копируем конфигурацию
+COPY configs/config.yml ./configs/config.yml
+
+# Копируем миграции
+COPY migrations ./migrations
 
 # Копируем миграции
 COPY migrations ./migrations

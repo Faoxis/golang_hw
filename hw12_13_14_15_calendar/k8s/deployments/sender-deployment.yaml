@@ -17,23 +17,12 @@ spec:
       - name: calendar-sender
         image: calendar-sender:latest
         imagePullPolicy: Never
-        env:
-        - name: RABBITMQ_HOST
-          value: rabbitmq-service
-        - name: RABBITMQ_PORT
-          value: "5672"
-        - name: RABBITMQ_USER
-          value: calendar_user
-        - name: RABBITMQ_PASS
-          valueFrom:
-            secretKeyRef:
-              name: calendar-secrets
-              key: rabbitmq-password
+
         volumeMounts:
         - name: config-volume
-          mountPath: /app/sender_config.yaml
+          mountPath: /app/configs/sender_config.yaml
           subPath: sender-config.yaml
       volumes:
       - name: config-volume
         configMap:
-          name: calendar-config
+          name: sender-config

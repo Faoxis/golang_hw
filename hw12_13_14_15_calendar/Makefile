@@ -58,10 +58,22 @@ integration-tests:
 
 # Kubernetes commands
 k8s-apply:
-	kubectl apply -f k8s/
+	kubectl apply -f k8s/namespace.yaml
+	kubectl apply -f k8s/secrets/
+	kubectl apply -f k8s/configmaps/
+	kubectl apply -f k8s/storage/
+	kubectl apply -f k8s/services/
+	kubectl apply -f k8s/deployments/
+	kubectl apply -f k8s/ingress/
 
 k8s-delete:
-	kubectl delete -f k8s/
+	kubectl delete -f k8s/ingress/
+	kubectl delete -f k8s/deployments/
+	kubectl delete -f k8s/services/
+	kubectl delete -f k8s/storage/
+	kubectl delete -f k8s/configmaps/
+	kubectl delete -f k8s/secrets/
+	kubectl delete -f k8s/namespace.yaml
 
 k8s-status:
 	kubectl get all -n calendar
