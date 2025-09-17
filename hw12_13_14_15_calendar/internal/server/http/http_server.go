@@ -34,6 +34,10 @@ func NewServer(logger server.Logger, host string, port int, app server.Applicati
 	router.Get("/hello", func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte("Hello, World!"))
 	})
+	router.Get("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("OK"))
+	})
 	router.Route("/events", func(router route.Router) {
 		router.Get("/day", getEventsForDay(app, logger))
 		router.Get("/week", getEventsForWeek(app, logger))
