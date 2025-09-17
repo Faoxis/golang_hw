@@ -25,5 +25,5 @@ spec:
         - name: RABBITMQ_DEFAULT_PASS
           valueFrom:
             secretKeyRef:
-              name: calendar-secrets
-              key: rabbitmq-password
+              name: rabbitmq-secret
+              key: password

@@ -1,13 +1,16 @@
+logger:
+  level: debug
+
 storage:
-  host: localhost
-  port: 5434
+  host: postgres-service
+  port: 5432
   user: calendar_user
   password: calendar_pass
   database: calendar
   sslmode: disable
 
 rabbit:
-  url: localhost:5672
+  url: rabbitmq-service:5672
   username: calendar_user
   password: calendar_pass
 
