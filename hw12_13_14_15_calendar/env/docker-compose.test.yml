@@ -1,0 +1,26 @@
+version: '3.9'
+
+services:
+  integration-tests:
+    build:
+      context: ..
+      dockerfile: env/Dockerfile.integration-tests
+    container_name: calendar_integration_tests
+    depends_on:
+      calendar:
+        condition: service_healthy
+      calendar_scheduler:
+        condition: service_started
+      calendar_sender:
+        condition: service_started
+    environment:
+      API_URL: http://calendar:8888
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: calendar_user
+      POSTGRES_PASSWORD: calendar_pass
+      POSTGRES_DB: calendar
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: calendar_user
+      RABBITMQ_PASS: calendar_pass
