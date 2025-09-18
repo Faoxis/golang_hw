@@ -23,7 +23,7 @@ WORKDIR /root/
 COPY --from=builder /app/calendar .
 
 # Копируем конфигурацию
-COPY configs/config.yml ./configs/config.yml
+COPY configs/config.template.yml ./configs/config.yml
 
 # Копируем миграции
 COPY migrations ./migrations
