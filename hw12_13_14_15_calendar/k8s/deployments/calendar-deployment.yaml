@@ -47,7 +47,7 @@ spec:
           value: "disable"
         volumeMounts:
         - name: config-volume
-          mountPath: /app/configs/config.yml
+          mountPath: /app/config.yml
           subPath: calendar-config.yml
         livenessProbe:
           httpGet:
