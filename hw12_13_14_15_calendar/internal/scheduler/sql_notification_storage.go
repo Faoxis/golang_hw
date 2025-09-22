@@ -8,7 +8,7 @@ import (
 
 	"github.com/Faoxis/golang_hw/hw12_13_14_15_calendar/internal/app"
 	"github.com/Faoxis/golang_hw/hw12_13_14_15_calendar/internal/storage"
-	_ "github.com/jackc/pgx/v5"
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 type SQLNotificationStorage struct {
@@ -17,7 +17,7 @@ type SQLNotificationStorage struct {
 }
 
 func NewSQLNotificationStorage(dsn string, logger app.Logger) (NotificationStorage, error) {
-	db, err := sql.Open("postgres", dsn)
+	db, err := sql.Open("pgx", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("cannot open db: %w", err)
 	}

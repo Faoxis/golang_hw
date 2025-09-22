@@ -10,7 +10,7 @@ storage:
   sslmode: ${POSTGRES_SSLMODE:-disable}
 
 rabbit:
-  url: ${RABBITMQ_HOST:-localhost}:${RABBITMQ_PORT:-5672}
+  url: amqp://${RABBITMQ_USER:-calendar_user}:${RABBITMQ_PASS:-calendar_pass}@${RABBITMQ_HOST:-localhost}:${RABBITMQ_PORT:-5672}/
   username: ${RABBITMQ_USER:-calendar_user}
   password: ${RABBITMQ_PASS:-calendar_pass}
 
