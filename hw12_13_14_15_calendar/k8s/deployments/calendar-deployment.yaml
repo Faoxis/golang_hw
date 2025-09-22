@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: calendar-api
+  namespace: calendar
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: calendar-api
+  template:
+    metadata:
+      labels:
+        app: calendar-api
+    spec:
+      containers:
+      - name: calendar-api
+        image: calendar:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8888
+        env:
+        - name: LOG_LEVEL
+          value: "debug"
+        - name: SERVER_HOST
+          value: "0.0.0.0"
+        - name: SERVER_PORT
+          value: "8888"
+        - name: GRPC_PORT
+          value: ":6523"
+        - name: STORAGE_TYPE
+          value: "database"
+        - name: POSTGRES_HOST
+          value: "postgres-service"
+        - name: POSTGRES_PORT
+          value: "5432"
+        - name: POSTGRES_USER
+          value: "calendar_user"
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: password
+        - name: POSTGRES_DB
+          value: "calendar"
+        - name: POSTGRES_SSLMODE
+          value: "disable"
+        volumeMounts:
+        - name: config-volume
+          mountPath: /app/config.yml
+          subPath: calendar-config.yml
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8888
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8888
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: config-volume
+        configMap:
+          name: calendar-config

@@ -1,7 +1,7 @@
 #!/bin/sh
 
-# Заполняем шаблон конфигурации из переменных окружения
-envsubst < config.template.yml > config.yml
+# Подставляем переменные окружения в конфигурацию
+envsubst < ./configs/config.yml > ./configs/config-resolved.yml
 
 # Запускаем приложение
-exec ./calendar -config ./config.yml
+exec ./calendar -config ./configs/config-resolved.yml

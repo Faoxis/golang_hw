@@ -1,0 +1,11 @@
+logger:
+  level: debug
+
+rabbit:
+  url: rabbitmq-service:5672
+  username: calendar_user
+  password: calendar_pass
+
+event-queue:
+  name: events
+  exchange: events

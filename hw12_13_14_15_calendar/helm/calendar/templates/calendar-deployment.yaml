@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: calendar-api
+  namespace: {{ .Values.global.namespace }}
+spec:
+  replicas: {{ .Values.api.replicas }}
+  selector:
+    matchLabels:
+      app: calendar-api
+  template:
+    metadata:
+      labels:
+        app: calendar-api
+    spec:
+      containers:
+      - name: calendar-api
+        image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - containerPort: {{ .Values.api.port }}
+        env:
+        - name: POSTGRES_HOST
+          value: postgres-service
+        - name: POSTGRES_PORT
+          value: "5432"
+        - name: POSTGRES_USER
+          value: calendar_user
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: password
+        - name: POSTGRES_DB
+          value: calendar
+        volumeMounts:
+        - name: config-volume
+          mountPath: /app/config.yml
+          subPath: calendar-config.yml
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: {{ .Values.api.port }}
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: {{ .Values.api.port }}
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          {{- toYaml .Values.api.resources | nindent 12 }}
+      volumes:
+      - name: config-volume
+        configMap:
+          name: calendar-config

@@ -42,4 +42,53 @@ lint-docker:
 generate:
 	protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative api/EventService.proto
 
-.PHONY: build run build-img run-img version test lint lint-docker generate
+# Docker commands
+up:
+	cd env && docker-compose up -d
+
+down:
+	cd env && docker-compose down
+
+logs:
+	cd env && docker-compose logs -f
+
+# Integration tests
+integration-tests:
+	cd env && docker-compose -f docker-compose.yml -f docker-compose.test.yml up --build --abort-on-container-exit --exit-code-from integration-tests
+
+# Kubernetes commands
+k8s-apply:
+	kubectl apply -f k8s/namespace.yaml
+	kubectl apply -f k8s/secrets/
+	kubectl apply -f k8s/configmaps/
+	kubectl apply -f k8s/storage/
+	kubectl apply -f k8s/services/
+	kubectl apply -f k8s/deployments/
+	kubectl apply -f k8s/ingress/
+
+k8s-delete:
+	kubectl delete -f k8s/ingress/
+	kubectl delete -f k8s/deployments/
+	kubectl delete -f k8s/services/
+	kubectl delete -f k8s/storage/
+	kubectl delete -f k8s/configmaps/
+	kubectl delete -f k8s/secrets/
+	kubectl delete -f k8s/namespace.yaml
+
+k8s-status:
+	kubectl get all -n calendar
+
+# Helm commands
+helm-install:
+	helm install calendar ./helm/calendar
+
+helm-upgrade:
+	helm upgrade calendar ./helm/calendar
+
+helm-uninstall:
+	helm uninstall calendar
+
+helm-status:
+	helm status calendar
+
+.PHONY: build run build-img run-img version test lint lint-docker generate up down logs integration-tests k8s-apply k8s-delete k8s-status helm-install helm-upgrade helm-uninstall helm-status

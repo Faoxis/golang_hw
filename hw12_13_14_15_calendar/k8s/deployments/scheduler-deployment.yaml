@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: calendar-scheduler
+  namespace: calendar
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: calendar-scheduler
+  template:
+    metadata:
+      labels:
+        app: calendar-scheduler
+    spec:
+      containers:
+      - name: calendar-scheduler
+        image: calendar-scheduler:latest
+        imagePullPolicy: Never
+
+        volumeMounts:
+        - name: config-volume
+          mountPath: /app/configs/scheduler_config.yaml
+          subPath: scheduler-config.yaml
+      volumes:
+      - name: config-volume
+        configMap:
+          name: scheduler-config

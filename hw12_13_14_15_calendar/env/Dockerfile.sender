@@ -1,8 +1,9 @@
+# Многоэтапная сборка
 FROM golang:1.25-alpine AS builder
 
 WORKDIR /app
 
-# Копируем go mod файлы
+# Копируем файлы зависимостей
 COPY go.mod go.sum ./
 RUN go mod download
 
@@ -22,13 +23,10 @@ WORKDIR /root/
 # Копируем бинарный файл
 COPY --from=builder /app/calendar_sender .
 
-# Копируем шаблон конфигурации
-COPY configs/sender_config.template.yaml ./sender_config.template.yaml
+# Копируем конфигурацию
+COPY configs/sender_config.yaml ./configs/sender_config.yaml
 
-# Устанавливаем envsubst
-RUN apk add --no-cache gettext
-
-# Скрипт запуска
+# Копируем скрипт запуска
 COPY env/start-sender.sh ./start-sender.sh
 RUN chmod +x ./start-sender.sh
 

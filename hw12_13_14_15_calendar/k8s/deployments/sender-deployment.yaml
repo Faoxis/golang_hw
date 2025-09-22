@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: calendar-sender
+  namespace: calendar
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: calendar-sender
+  template:
+    metadata:
+      labels:
+        app: calendar-sender
+    spec:
+      containers:
+      - name: calendar-sender
+        image: calendar-sender:latest
+        imagePullPolicy: Never
+
+        volumeMounts:
+        - name: config-volume
+          mountPath: /app/configs/sender_config.yaml
+          subPath: sender-config.yaml
+      volumes:
+      - name: config-volume
+        configMap:
+          name: sender-config
